@@ -4,6 +4,75 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Cinzel', ui-serif, Georgia, serif;
+
+    /* Paleta Black Multimarca: fondo marfil, negro carbón y dorado champagne. */
+    --color-ivory: #f7f3ec;
+    --color-ivory-dark: #fbf9f5;
+    --color-sand: #ece4d6;
+    --color-line: #e3d9c6;
+    --color-line-strong: #cdbfa6;
+    --color-ink: #0d0d0d;
+    --color-coal: #1a1a1a;
+    --color-coal-soft: #3d3830;
+    --color-muted: #5e5850;
+    --color-cream: #f5f0e6;
+    --color-cream-muted: #cfc6b6;
+    --color-gold: #c9a96e;
+    --color-gold-light: #e8d5a8;
+    --color-bronze: #7a5a2e;
+    --color-bronze-dark: #4f3a1c;
+    --color-edge: #3a3022;
+}
+
+@layer base {
+    body {
+        @apply bg-ivory font-sans text-coal antialiased;
+    }
+
+    [x-cloak],
+    [hidden] {
+        display: none !important;
+    }
+}
+
+@utility eyebrow {
+    @apply text-[11px] font-medium tracking-[0.3em] text-bronze uppercase;
+}
+
+@utility btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 px-6 text-xs font-semibold tracking-[0.16em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-dark {
+    @apply btn bg-ink text-gold-light hover:bg-coal-soft;
+}
+
+@utility btn-gold {
+    @apply btn bg-gold text-ink hover:bg-gold-light;
+}
+
+@utility btn-outline {
+    @apply btn border border-bronze text-bronze hover:bg-bronze hover:text-ivory;
+}
+
+@utility btn-outline-gold {
+    @apply btn border border-gold text-gold-light hover:bg-gold hover:text-ink;
+}
+
+@utility field-label {
+    @apply flex flex-col gap-1.5 text-xs font-semibold tracking-wide text-coal;
+}
+
+@utility field-input {
+    @apply min-h-11 w-full border border-line-strong bg-ivory-dark px-3.5 text-sm font-normal tracking-normal text-coal placeholder:text-muted/70 focus:border-bronze focus:ring-1 focus:ring-bronze focus:outline-none;
+}
+
+@utility field-error {
+    @apply text-xs font-medium text-red-700;
+}
+
+@utility card {
+    @apply border border-line bg-white;
 }
