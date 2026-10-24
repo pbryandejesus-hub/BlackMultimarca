@@ -7,10 +7,16 @@ services:
     working_dir: /var/www/html
     volumes:
       - .:/var/www/html
+      # vendor/ vive en un volumen de Docker: leer miles de archivos desde un disco de Windows
+      # (WSL / Docker Desktop) hacía que cada página tardara varios segundos.
+      - vendor_data:/var/www/html/vendor
+    # Instala o actualiza las dependencias en el volumen (rápido si ya están) y levanta el servidor.
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
     ports:
       - "8000:8000"
     environment:
       APP_ENV: local
+      PHP_CLI_SERVER_WORKERS: 4
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
@@ -42,3 +48,4 @@ services:
 
 volumes:
   mysql_data:
+  vendor_data:
