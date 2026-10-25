@@ -10,6 +10,17 @@ class AuthTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_visitors_see_the_create_account_button_and_customers_do_not(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Crear cuenta')
+            ->assertSee(route('register'), false);
+
+        $this->actingAs(User::factory()->create())->get(route('home'))
+            ->assertDontSee('Crear cuenta');
+    }
+
     public function test_a_customer_can_register_and_is_logged_in(): void
     {
         $this->post(route('register'), [

@@ -54,9 +54,11 @@
                         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="flex h-11 w-11 items-center justify-center text-gold-light hover:text-gold" aria-label="Ingresar">
+                    <a href="{{ route('login') }}" class="flex h-11 w-11 items-center justify-center text-gold-light hover:text-gold sm:hidden" aria-label="Ingresar">
                         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
                     </a>
+                    <a href="{{ route('login') }}" class="hidden h-11 items-center px-2 text-[11px] font-semibold tracking-[0.16em] text-gold-light uppercase hover:text-gold sm:flex">Ingresar</a>
+                    <a href="{{ route('register') }}" class="mr-1 hidden h-9 items-center border border-gold px-3 text-[11px] font-semibold tracking-[0.16em] text-gold-light uppercase hover:bg-gold hover:text-ink sm:flex">Crear cuenta</a>
                 @endauth
 
                 <a href="{{ route('cart.index') }}" class="relative flex h-11 w-11 items-center justify-center text-gold-light hover:text-gold" aria-label="Carrito, {{ $cartCount }} productos">
@@ -83,6 +85,14 @@
                 @endforeach
                 <a href="{{ route('catalog') }}" class="py-3 text-gold">Ver todo</a>
             </nav>
+            <div class="mt-3 flex gap-3">
+                @auth
+                    <a href="{{ route('account.index') }}" class="btn-outline-gold grow">Mi cuenta</a>
+                @else
+                    <a href="{{ route('login') }}" class="btn-outline-gold grow">Ingresar</a>
+                    <a href="{{ route('register') }}" class="btn-gold grow">Crear cuenta</a>
+                @endauth
+            </div>
         </div>
     </header>
 

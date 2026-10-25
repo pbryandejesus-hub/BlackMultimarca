@@ -9,7 +9,7 @@
                 <fieldset class="card flex flex-col gap-5 p-6 md:p-7">
                     <legend class="px-2 font-display text-lg font-semibold">1 · Tus datos</legend>
                     @guest
-                        <p class="text-sm text-muted">¿Ya tenés cuenta? <a href="{{ route('login') }}" class="text-bronze underline">Ingresá</a> para ver tus pedidos después. También podés comprar sin registrarte.</p>
+                        <p class="text-sm text-muted">¿Ya tenés cuenta? <a href="{{ route('login') }}" class="text-bronze underline">Ingresá</a>. Si no, <a href="{{ route('register') }}" class="text-bronze underline">creá una cuenta</a> para guardar tus datos y seguir tus pedidos. También podés comprar sin registrarte.</p>
                     @endguest
                     <div class="grid gap-4 sm:grid-cols-2">
                         <label class="field-label">Nombre y apellido
