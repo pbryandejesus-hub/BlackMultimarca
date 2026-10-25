@@ -11,7 +11,7 @@ services:
       # (WSL / Docker Desktop) hacía que cada página tardara varios segundos.
       - vendor_data:/var/www/html/vendor
     # Instala o actualiza las dependencias en el volumen (rápido si ya están) y levanta el servidor.
-    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
     ports:
       - "8000:8000"
     environment:
