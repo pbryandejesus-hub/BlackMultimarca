@@ -1,5 +1,5 @@
 <x-layouts.admin title="Resumen">
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <a href="{{ route('admin.orders.index', ['estado' => 'en_revision']) }}" class="card flex flex-col gap-1 p-5 hover:border-bronze">
             <span class="text-xs tracking-wide text-muted uppercase">Comprobantes por revisar</span>
             <span class="font-display text-3xl font-semibold">{{ $underReviewCount }}</span>
@@ -16,6 +16,45 @@
             <span class="text-xs tracking-wide text-muted uppercase">Productos activos</span>
             <span class="font-display text-3xl font-semibold">{{ $activeProductsCount }}</span>
         </a>
+        <div class="card flex flex-col gap-1 p-5">
+            <span class="text-xs tracking-wide text-muted uppercase">Pedidos confirmados del mes</span>
+            <span class="font-display text-3xl font-semibold">{{ $monthOrdersCount }}</span>
+        </div>
+        <div class="card flex flex-col gap-1 p-5">
+            <span class="text-xs tracking-wide text-muted uppercase">Ticket promedio del mes</span>
+            <x-price :amount="$monthAverageTicket" class="font-display text-3xl font-semibold" />
+        </div>
+    </div>
+
+    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+        <section class="card min-w-0 p-5 lg:col-span-2">
+            <h2 class="mb-4 font-display text-lg font-semibold">Ventas de los últimos 30 días</h2>
+            <div class="relative h-72">
+                <canvas data-chart='@json($charts['dailySales'])' aria-label="Gráfico de ventas por día" role="img"></canvas>
+            </div>
+        </section>
+        <section class="card min-w-0 p-5">
+            <h2 class="mb-4 font-display text-lg font-semibold">Ventas por mes</h2>
+            <div class="relative h-72">
+                <canvas data-chart='@json($charts['monthlySales'])' aria-label="Gráfico de ventas por mes" role="img"></canvas>
+            </div>
+        </section>
+        <section class="card min-w-0 p-5">
+            <h2 class="mb-4 font-display text-lg font-semibold">Pedidos por estado</h2>
+            <div class="relative h-72">
+                <canvas data-chart='@json($charts['ordersByStatus'])' aria-label="Gráfico de pedidos por estado" role="img"></canvas>
+            </div>
+        </section>
+        <section class="card min-w-0 p-5 lg:col-span-2">
+            <h2 class="mb-4 font-display text-lg font-semibold">Productos más vendidos</h2>
+            @if ($charts['topProducts']['values'] === [])
+                <p class="py-6 text-sm text-muted">Todavía no hay ventas confirmadas.</p>
+            @else
+                <div class="relative h-64">
+                    <canvas data-chart='@json($charts['topProducts'])' aria-label="Gráfico de productos más vendidos" role="img"></canvas>
+                </div>
+            @endif
+        </section>
     </div>
 
     <div class="mt-8 flex flex-wrap gap-6">

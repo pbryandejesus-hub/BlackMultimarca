@@ -334,6 +334,73 @@ function initTargetedVariant() {
     }, 300);
 }
 
+/**
+ * Gráficos del panel de administración. Cada <canvas data-chart> trae su tipo, etiquetas y valores en JSON;
+ * Chart.js se descarga solo en las páginas que tienen gráficos.
+ */
+async function initCharts() {
+    const canvases = $$('canvas[data-chart]');
+    if (!canvases.length) return;
+
+    const { default: Chart } = await import('chart.js/auto');
+
+    const palette = ['#c9a96e', '#7a5a2e', '#0d0d0d', '#e8d5a8', '#3d3830', '#cdbfa6'];
+    const guaranies = new Intl.NumberFormat('es-PY');
+    const formatMoney = (value) => `₲ ${guaranies.format(value)}`;
+
+    Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+    Chart.defaults.color = '#5e5850';
+    Chart.defaults.borderColor = '#e3d9c6';
+
+    canvases.forEach((canvas) => {
+        const { type, labels, values, money = false, horizontal = false, unit = '' } = JSON.parse(canvas.dataset.chart);
+        const formatValue = (value) => (money ? formatMoney(value) : `${guaranies.format(value)} ${unit}`.trim());
+        const isDoughnut = type === 'doughnut';
+
+        new Chart(canvas, {
+            type,
+            data: {
+                labels,
+                datasets: [
+                    {
+                        data: values,
+                        backgroundColor: isDoughnut ? palette : type === 'line' ? 'rgba(201, 169, 110, 0.18)' : '#c9a96e',
+                        borderColor: isDoughnut ? '#ffffff' : '#7a5a2e',
+                        borderWidth: type === 'bar' ? 0 : 2,
+                        fill: type === 'line',
+                        tension: 0.35,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        hoverBackgroundColor: isDoughnut ? undefined : '#7a5a2e',
+                    },
+                ],
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: horizontal ? 'y' : 'x',
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: isDoughnut, position: 'bottom' },
+                    tooltip: {
+                        backgroundColor: '#0d0d0d',
+                        titleColor: '#e8d5a8',
+                        callbacks: { label: (context) => ` ${formatValue(context.raw)}` },
+                    },
+                },
+                scales: isDoughnut
+                    ? {}
+                    : {
+                          [horizontal ? 'x' : 'y']: {
+                              beginAtZero: true,
+                              ticks: { callback: (value) => (money ? formatMoney(value) : value), precision: 0 },
+                          },
+                          [horizontal ? 'y' : 'x']: { grid: { display: false } },
+                      },
+            },
+        });
+    });
+}
+
 function initConfirmations() {
     $$('form[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -353,4 +420,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initVariantRows();
     initTargetedVariant();
     initConfirmations();
+    initCharts();
 });
