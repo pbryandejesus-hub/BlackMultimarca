@@ -1,0 +1,3 @@
+latest-test-run.json
+*.tmp
+__pycache__/
