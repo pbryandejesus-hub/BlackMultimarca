@@ -82,6 +82,27 @@
                     <input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple class="border border-dashed border-[#b7a584] bg-ivory-dark p-3.5 text-sm font-normal">
                 </label>
             </section>
+
+            <section class="card flex flex-col gap-4 p-6">
+                <h2 class="font-display text-lg font-semibold">Modelo 3D</h2>
+                <p class="text-sm text-muted">Opcional. Con un modelo 3D el cliente puede girar la prenda, hacer zoom y verla en realidad aumentada desde el celular. Se genera gratis escaneando la prenda (mejor sobre un maniquí) con apps como Polycam, KIRI Engine o Luma AI, o a partir de fotos con Meshy o Tripo. Exportalo en formato GLB.</p>
+                @if ($isEditing && $product->hasModel())
+                    <div class="flex flex-wrap items-center gap-4 border border-line bg-ivory-dark px-4 py-3 text-sm">
+                        <span>✓ Este producto tiene modelo 3D.</span>
+                        <a href="{{ $product->modelUrl() }}" target="_blank" class="text-bronze underline">Descargar</a>
+                        <label class="flex items-center gap-2 text-red-700">
+                            <input type="checkbox" name="remove_model" value="1" class="h-4 w-4 accent-red-700">
+                            Quitar modelo 3D
+                        </label>
+                    </div>
+                @endif
+                <label class="field-label">{{ $isEditing && $product->hasModel() ? 'Reemplazar modelo' : 'Subir modelo' }} (.glb, hasta 20 MB)
+                    <input type="file" name="model" accept=".glb,model/gltf-binary" class="border border-dashed border-[#b7a584] bg-ivory-dark p-3.5 text-sm font-normal">
+                </label>
+                @error('model')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
+            </section>
         </div>
 
         <aside class="card flex flex-[1_1_260px] flex-col gap-4 p-6">

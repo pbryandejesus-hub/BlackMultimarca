@@ -127,4 +127,83 @@ class AdminProductTest extends TestCase
 
         $this->assertModelExists($product->category);
     }
+
+    public function test_admin_uploads_a_3d_model_and_replacing_it_deletes_the_old_file(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->create();
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->put(route('admin.products.update', $product), [
+            ...$this->updatePayload($product),
+            'model' => UploadedFile::fake()->create('remera.glb', 500, 'model/gltf-binary'),
+        ])->assertSessionHasNoErrors();
+
+        $firstPath = $product->fresh()->model_path;
+        $this->assertStringEndsWith('.glb', $firstPath);
+        Storage::disk('public')->assertExists($firstPath);
+
+        $this->actingAs($admin)->put(route('admin.products.update', $product), [
+            ...$this->updatePayload($product),
+            'model' => UploadedFile::fake()->create('remera-nueva.glb', 500, 'application/octet-stream'),
+        ])->assertSessionHasNoErrors();
+
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($product->fresh()->model_path);
+    }
+
+    public function test_admin_can_remove_the_3d_model(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->withModel()->create();
+        Storage::disk('public')->put($product->model_path, 'glb');
+
+        $this->actingAs(User::factory()->admin()->create())->put(route('admin.products.update', $product), [
+            ...$this->updatePayload($product),
+            'remove_model' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertNull($product->fresh()->model_path);
+        Storage::disk('public')->assertMissing($product->model_path);
+    }
+
+    public function test_the_3d_model_must_be_a_glb_file_of_at_most_20_mb(): void
+    {
+        $product = Product::factory()->create();
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->put(route('admin.products.update', $product), [
+            ...$this->updatePayload($product),
+            'model' => UploadedFile::fake()->create('virus.exe', 100),
+        ])->assertSessionHasErrors('model');
+
+        $this->actingAs($admin)->put(route('admin.products.update', $product), [
+            ...$this->updatePayload($product),
+            'model' => UploadedFile::fake()->create('enorme.glb', 20481),
+        ])->assertSessionHasErrors('model');
+    }
+
+    public function test_deleting_a_product_deletes_its_3d_model(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->withModel()->create();
+        Storage::disk('public')->put($product->model_path, 'glb');
+
+        $this->actingAs(User::factory()->admin()->create())->delete(route('admin.products.destroy', $product));
+
+        Storage::disk('public')->assertMissing($product->model_path);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function updatePayload(Product $product): array
+    {
+        return [
+            'category_id' => $product->category_id,
+            'name' => $product->name,
+            'price' => $product->price,
+            'variants' => [['size' => 'M', 'stock' => 1]],
+        ];
+    }
 }

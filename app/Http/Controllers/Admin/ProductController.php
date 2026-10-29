@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -51,13 +52,14 @@ class ProductController extends Controller
     public function store(ProductRequest $request): RedirectResponse
     {
         $product = DB::transaction(function () use ($request): Product {
-            $product = Product::create($request->safe()->except(['images', 'variants']));
+            $product = Product::create($request->safe()->except(['images', 'variants', 'model', 'remove_model']));
             $this->syncVariants($product, $request->validated('variants'));
 
             return $product;
         });
 
         $this->storeImages($product, $request->file('images', []));
+        $this->storeModel($product, $request->file('model'), false);
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'Producto creado.');
     }
@@ -73,18 +75,19 @@ class ProductController extends Controller
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
         DB::transaction(function () use ($request, $product): void {
-            $product->update($request->safe()->except(['images', 'variants']));
+            $product->update($request->safe()->except(['images', 'variants', 'model', 'remove_model']));
             $this->syncVariants($product, $request->validated('variants'));
         });
 
         $this->storeImages($product, $request->file('images', []));
+        $this->storeModel($product, $request->file('model'), $request->boolean('remove_model'));
 
         return redirect()->route('admin.products.edit', $product)->with('status', 'Producto actualizado.');
     }
 
     public function destroy(Product $product): RedirectResponse
     {
-        $paths = $product->images()->pluck('path')->all();
+        $paths = $product->images()->pluck('path')->push($product->model_path)->filter()->all();
 
         $product->delete();
         Storage::disk('public')->delete($paths);
@@ -147,6 +150,26 @@ class ProductController extends Controller
                 'path' => $file->store('products', 'public'),
                 'position' => ++$position,
             ]);
+        }
+    }
+
+    /**
+     * Guarda el modelo 3D (.glb) del producto. Reemplaza o quita el anterior y borra su archivo.
+     */
+    private function storeModel(Product $product, ?UploadedFile $file, bool $remove): void
+    {
+        if (! $file && ! $remove) {
+            return;
+        }
+
+        $previousPath = $product->model_path;
+
+        $product->update([
+            'model_path' => $file?->storeAs('products/models', Str::uuid().'.glb', 'public'),
+        ]);
+
+        if ($previousPath) {
+            Storage::disk('public')->delete($previousPath);
         }
     }
 }

@@ -25,20 +25,32 @@
 
         <div class="flex flex-wrap gap-10 lg:gap-14">
             <div class="flex min-w-0 flex-[1_1_480px] flex-col-reverse gap-3 sm:flex-row">
-                @if ($product->images->count() > 1)
-                    <div class="flex gap-2.5 sm:flex-col">
+                @if ($product->images->count() > 1 || $product->hasModel())
+                    <div class="flex gap-2.5 overflow-x-auto sm:flex-col">
                         @foreach ($product->images as $image)
                             <button type="button" data-gallery-thumb="{{ $image->url() }}" aria-pressed="{{ $loop->first ? 'true' : 'false' }}" aria-label="Ver foto {{ $loop->iteration }}" class="h-24 w-20 shrink-0 overflow-hidden border border-line aria-pressed:border-2 aria-pressed:border-bronze">
                                 <img src="{{ $image->url() }}" alt="" class="h-full w-full object-cover">
                             </button>
                         @endforeach
+                        @if ($product->hasModel())
+                            <button type="button" data-model-open aria-label="Ver en 3D" class="flex h-24 w-20 shrink-0 flex-col items-center justify-center gap-1.5 border border-ink bg-ink text-gold-light hover:bg-coal-soft">
+                                <x-icon-cube class="h-7 w-7" />
+                                <span class="text-[10px] font-semibold tracking-[0.2em]">3D</span>
+                            </button>
+                        @endif
                     </div>
                 @endif
-                <div class="aspect-[4/5] grow overflow-hidden border border-line bg-sand">
+                <div class="relative aspect-[4/5] grow overflow-hidden border border-line bg-sand">
                     @if ($product->images->isNotEmpty())
                         <img src="{{ $product->images->first()->url() }}" alt="{{ $product->name }}" data-gallery-main class="h-full w-full object-cover">
                     @else
                         <x-product-image :product="$product" />
+                    @endif
+                    @if ($product->hasModel())
+                        <button type="button" data-model-open class="btn-dark absolute bottom-4 left-1/2 -translate-x-1/2 shadow-lg">
+                            <x-icon-cube class="h-4 w-4" />
+                            Ver en 3D
+                        </button>
                     @endif
                 </div>
             </div>
@@ -156,4 +168,44 @@
             </section>
         @endif
     </div>
+
+    @if ($product->hasModel())
+        <dialog data-model-dialog aria-label="Vista 3D de {{ $product->name }}" class="m-0 h-dvh max-h-none w-screen max-w-none bg-ivory p-0 text-coal">
+            <div class="flex h-full flex-col">
+                <header class="flex items-center justify-between gap-4 border-b border-line px-5 py-3">
+                    <div class="flex min-w-0 flex-col">
+                        <span class="eyebrow">Vista 3D</span>
+                        <span class="truncate font-display text-lg font-medium">{{ $product->name }}</span>
+                    </div>
+                    <button type="button" data-model-close class="h-11 w-11 shrink-0 text-3xl leading-none hover:text-bronze" aria-label="Cerrar vista 3D">×</button>
+                </header>
+                <div class="relative grow bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,var(--color-sand)_75%)]">
+                    <model-viewer
+                        src="{{ $product->modelUrl() }}"
+                        alt="Modelo 3D de {{ $product->name }}"
+                        @if ($product->images->isNotEmpty()) poster="{{ $product->images->first()->url() }}" @endif
+                        camera-controls
+                        touch-action="pan-y"
+                        auto-rotate
+                        auto-rotate-delay="1500"
+                        interaction-prompt="auto"
+                        shadow-intensity="1"
+                        environment-image="neutral"
+                        ar
+                        ar-modes="webxr scene-viewer quick-look"
+                        class="h-full w-full"
+                        style="--poster-color: transparent;"
+                    >
+                        <div slot="progress-bar"></div>
+                        <button slot="ar-button" type="button" class="btn-dark absolute right-5 bottom-5 shadow-lg">Ver en tu espacio (AR)</button>
+                    </model-viewer>
+                    <div data-model-progress class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-line">
+                        <div class="h-full w-0 bg-gold transition-[width] duration-200"></div>
+                    </div>
+                    <p data-model-error hidden class="absolute inset-x-0 top-1/2 px-6 text-center text-sm text-muted">No se pudo cargar la vista 3D. Revisá tu conexión e intentá de nuevo.</p>
+                </div>
+                <p class="border-t border-line px-5 py-3 text-center text-xs text-muted">Arrastrá para girar · Rueda o pellizcá para hacer zoom · En el celular podés verlo en tu espacio con realidad aumentada</p>
+            </div>
+        </dialog>
+    @endif
 </x-layouts.store>

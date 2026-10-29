@@ -38,6 +38,8 @@ class ProductRequest extends FormRequest
             'is_featured' => ['boolean'],
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'model' => ['nullable', 'file', 'extensions:glb', 'max:20480'],
+            'remove_model' => ['boolean'],
             'variants' => ['required', 'array', 'min:1'],
             'variants.*.id' => $productId
                 ? ['nullable', 'integer', 'distinct', Rule::exists('product_variants', 'id')->where('product_id', $productId)]
@@ -54,6 +56,7 @@ class ProductRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'is_featured' => $this->boolean('is_featured'),
+            'remove_model' => $this->boolean('remove_model'),
             'price' => $this->normalizeAmount($this->input('price')),
             'compare_price' => $this->normalizeAmount($this->input('compare_price')),
         ]);
@@ -82,6 +85,7 @@ class ProductRequest extends FormRequest
             'price' => 'precio',
             'compare_price' => 'precio anterior',
             'images.*' => 'imagen',
+            'model' => 'modelo 3D',
             'variants' => 'variantes',
             'variants.*.stock' => 'stock',
             'variants.*.color_hex' => 'código de color',

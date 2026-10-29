@@ -37,6 +37,13 @@ class ProductFactory extends Factory
         ]);
     }
 
+    public function withModel(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'model_path' => 'products/models/'.fake()->uuid().'.glb',
+        ]);
+    }
+
     /**
      * Crea el producto con una variante única con el stock indicado.
      */

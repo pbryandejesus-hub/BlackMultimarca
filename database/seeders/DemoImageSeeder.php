@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
  * Carga fotos de ejemplo (Unsplash, licencia libre) a los productos y categorías que no tienen.
  * Las fotos están en database/seeders/demo-images y se nombran por el slug:
  * "{slug}.jpg" es la principal y "{slug}-2.jpg", "{slug}-3.jpg"… las siguientes.
+ * Los modelos 3D van en demo-images/models/{slug}.glb.
  */
 class DemoImageSeeder extends Seeder
 {
@@ -32,6 +33,16 @@ class DemoImageSeeder extends Seeder
                 $path = 'products/demo-'.basename($file);
                 $disk->put($path, file_get_contents($file));
                 $product->images()->create(['path' => $path, 'position' => $position]);
+            }
+        }
+
+        foreach (Product::whereNull('model_path')->get() as $product) {
+            $file = "{$source}/models/{$product->slug}.glb";
+
+            if (is_file($file)) {
+                $path = 'products/models/demo-'.basename($file);
+                $disk->put($path, file_get_contents($file));
+                $product->update(['model_path' => $path]);
             }
         }
 

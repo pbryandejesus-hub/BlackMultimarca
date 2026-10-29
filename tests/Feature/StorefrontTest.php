@@ -46,6 +46,26 @@ class StorefrontTest extends TestCase
         $this->get(route('products.show', $product))->assertOk()->assertSee('₲ 150.000');
     }
 
+    public function test_product_with_a_3d_model_offers_the_3d_viewer(): void
+    {
+        $product = Product::factory()->withStock()->withModel()->create();
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('Ver en 3D')
+            ->assertSee($product->modelUrl(), false);
+    }
+
+    public function test_product_without_a_3d_model_does_not_offer_the_3d_viewer(): void
+    {
+        $product = Product::factory()->withStock()->create();
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertDontSee('Ver en 3D')
+            ->assertDontSee('<model-viewer', false);
+    }
+
     public function test_hidden_product_page_is_not_found(): void
     {
         $product = Product::factory()->inactive()->create();

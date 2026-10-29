@@ -15,5 +15,9 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@google/model-viewer": "^4.4.0",
+        "chart.js": "^4.6.1"
     }
 }

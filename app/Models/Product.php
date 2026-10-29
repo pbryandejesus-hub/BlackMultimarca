@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-#[Fillable(['category_id', 'brand_id', 'name', 'slug', 'sku', 'description', 'price', 'compare_price', 'is_active', 'is_featured'])]
+#[Fillable(['category_id', 'brand_id', 'name', 'slug', 'sku', 'description', 'price', 'compare_price', 'is_active', 'is_featured', 'model_path'])]
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
@@ -95,6 +96,19 @@ class Product extends Model
     public function hasComparePrice(): bool
     {
         return $this->compare_price !== null && $this->compare_price > $this->price;
+    }
+
+    /**
+     * Indica si el producto tiene un modelo 3D (.glb) para el visor.
+     */
+    public function hasModel(): bool
+    {
+        return filled($this->model_path);
+    }
+
+    public function modelUrl(): ?string
+    {
+        return $this->hasModel() ? Storage::disk('public')->url($this->model_path) : null;
     }
 
     public static function uniqueSlug(string $name, ?int $ignoreId = null): string

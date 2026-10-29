@@ -9,6 +9,12 @@
         @if ($badge)
             <span class="absolute top-3 left-3 bg-ink px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.16em] text-gold uppercase">{{ $badge }}</span>
         @endif
+        @if ($product->hasModel())
+            <span class="absolute top-3 right-3 flex items-center gap-1 bg-ivory/90 px-2 py-1.5 text-[10px] font-semibold tracking-[0.16em] text-bronze" title="Disponible en 3D">
+                <x-icon-cube class="h-3.5 w-3.5" />
+                3D
+            </span>
+        @endif
     </a>
     <div class="flex grow flex-col gap-1.5 p-4">
         <span class="text-[11px] tracking-[0.2em] text-bronze uppercase">

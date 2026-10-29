@@ -1,5 +1,5 @@
 /**
- * Interacciones de la tienda sin dependencias: menú móvil, galería, selector de variantes,
+ * Interacciones de la tienda: menú móvil, galería, visor 3D, selector de variantes,
  * cantidades, copiar datos bancarios y filas de variantes en el panel de administración.
  */
 
@@ -27,6 +27,44 @@ function initGallery() {
             main.src = thumb.dataset.galleryThumb;
             $$('[data-gallery-thumb]').forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
         });
+    });
+}
+
+/**
+ * Visor 3D de la ficha de producto. El componente <model-viewer> de Google pesa bastante,
+ * así que se descarga recién la primera vez que el cliente abre la vista 3D.
+ */
+function initModelViewer() {
+    const dialog = $('[data-model-dialog]');
+    if (!dialog) return;
+
+    const viewer = $('model-viewer', dialog);
+    const progress = $('[data-model-progress]', dialog);
+    const error = $('[data-model-error]', dialog);
+    let loading = null;
+
+    $$('[data-model-open]').forEach((button) =>
+        button.addEventListener('click', () => {
+            dialog.showModal();
+            loading ??= import('@google/model-viewer').catch(() => {
+                loading = null;
+                error.hidden = false;
+                progress.hidden = true;
+            });
+        }),
+    );
+
+    $('[data-model-close]', dialog).addEventListener('click', () => dialog.close());
+
+    viewer.addEventListener('progress', (event) => {
+        const total = event.detail.totalProgress;
+        progress.firstElementChild.style.width = `${total * 100}%`;
+        progress.hidden = total >= 1;
+    });
+
+    viewer.addEventListener('error', () => {
+        error.hidden = false;
+        progress.hidden = true;
     });
 }
 
@@ -250,6 +288,7 @@ function initConfirmations() {
 document.addEventListener('DOMContentLoaded', () => {
     initToggles();
     initGallery();
+    initModelViewer();
     initQuantityInputs();
     initVariantPicker();
     initCopyButtons();
