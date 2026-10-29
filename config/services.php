@@ -2,6 +2,16 @@
 
 return [
 
+    'admin_seed' => [
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
+    'receipts' => [
+        'max_kilobytes' => max(1, min((int) env('RECEIPT_MAX_KILOBYTES', 5120), 51200)),
+        'orphan_retention_hours' => max(24, (int) env('RECEIPT_ORPHAN_RETENTION_HOURS', 48)),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

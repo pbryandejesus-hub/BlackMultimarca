@@ -1,0 +1,78 @@
+name: blackmultimarca-production
+
+services:
+  app:
+    image: blackmultimarca-production-app:local
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: app
+    env_file:
+      - ${PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      SESSION_SECURE_COOKIE: "true"
+      DB_CONNECTION: mysql
+      FILESYSTEM_DISK: local
+    expose:
+      - "9000"
+    volumes:
+      - storage_data:/var/www/html/storage
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "php", "-r", "$$connection = @fsockopen('127.0.0.1', 9000); exit($$connection ? 0 : 1);"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  web:
+    image: blackmultimarca-production-web:local
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+      target: web
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:8080"
+    volumes:
+      - storage_data:/var/www/html/storage:ro
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  scheduler:
+    image: blackmultimarca-production-app:local
+    env_file:
+      - ${PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      SESSION_SECURE_COOKIE: "true"
+      DB_CONNECTION: mysql
+      FILESYSTEM_DISK: local
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - storage_data:/var/www/html/storage
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  storage_data:

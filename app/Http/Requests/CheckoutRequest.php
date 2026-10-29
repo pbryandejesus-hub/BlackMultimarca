@@ -33,7 +33,7 @@ class CheckoutRequest extends FormRequest
             'address' => ['nullable', 'required_if:delivery_method,'.Order::DELIVERY_SHIPPING, 'string', 'max:255'],
             'city' => ['nullable', 'required_if:delivery_method,'.Order::DELIVERY_SHIPPING, 'string', 'max:120'],
             'notes' => ['nullable', 'string', 'max:1000'],
-            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.(int) config('services.receipts.max_kilobytes', 5120)],
         ];
     }
 

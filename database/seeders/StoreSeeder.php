@@ -17,9 +17,20 @@ class StoreSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrNew(['email' => 'admin@blackmultimarca.com'])
-            ->forceFill(['name' => 'Administración', 'password' => 'password', 'is_admin' => true])
-            ->save();
+        $adminEmail = config('services.admin_seed.email');
+        $adminPassword = config('services.admin_seed.password');
+
+        if ($adminEmail && $adminPassword) {
+            $admin = User::firstOrNew(['email' => $adminEmail]);
+
+            if (! $admin->exists) {
+                $admin->forceFill([
+                    'name' => 'Administración',
+                    'password' => $adminPassword,
+                    'is_admin' => true,
+                ])->save();
+            }
+        }
 
         $categories = collect([
             ['Ropa', 'Mujer · Hombre'],
@@ -79,7 +90,11 @@ class StoreSeeder extends Seeder
 
             $colorOptions = collect($productColors)->mapWithKeys(fn ($hex, $color) => is_int($color) ? [$hex => $colors[$hex]] : [$color => $hex]);
 
-            foreach ($colorOptions->isEmpty() ? [null => null] : $colorOptions as $color => $hex) {
+            if ($colorOptions->isEmpty()) {
+                $colorOptions = collect(['' => null]);
+            }
+
+            foreach ($colorOptions as $color => $hex) {
                 foreach ($sizes === [] ? [null] : $sizes as $sizeIndex => $size) {
                     $product->variants()->create([
                         'size' => $size,

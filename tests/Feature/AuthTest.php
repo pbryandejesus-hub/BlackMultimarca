@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\StoreSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -60,5 +61,15 @@ class AuthTest extends TestCase
             ->post(route('login'), ['email' => $user->email, 'password' => 'password']);
 
         $this->assertSame([5 => 2], session('cart'));
+    }
+
+    public function test_store_seeder_does_not_create_an_admin_with_a_default_password(): void
+    {
+        config()->set('services.admin_seed.email', null);
+        config()->set('services.admin_seed.password', null);
+        $this->seed(StoreSeeder::class);
+
+        $this->assertDatabaseMissing('users', ['email' => 'admin@blackmultimarca.com']);
+        $this->assertDatabaseCount('users', 0);
     }
 }

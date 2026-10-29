@@ -55,4 +55,18 @@ enum OrderStatus: string
     {
         return [self::Paid, self::Shipped, self::Delivered];
     }
+
+    /**
+     * @return list<self>
+     */
+    public function allowedTransitions(): array
+    {
+        return match ($this) {
+            self::PendingPayment => [self::UnderReview, self::Paid, self::Cancelled],
+            self::UnderReview => [self::Paid, self::Cancelled],
+            self::Paid => [self::Shipped],
+            self::Shipped => [self::Delivered],
+            self::Delivered, self::Cancelled => [],
+        };
+    }
 }

@@ -61,6 +61,28 @@ class AdminProductTest extends TestCase
         $this->assertSame(['S', 'XL'], $product->variants()->pluck('size')->all());
     }
 
+    public function test_updating_a_product_rejects_a_variant_owned_by_another_product(): void
+    {
+        $product = Product::factory()->create();
+        $foreignVariant = ProductVariant::factory()->create(['stock' => 6]);
+        $originalVariant = ProductVariant::factory()->for($product)->create(['stock' => 4]);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->put(route('admin.products.update', $product), [
+                'category_id' => $product->category_id,
+                'name' => $product->name,
+                'price' => $product->price,
+                'variants' => [
+                    ['id' => $foreignVariant->id, 'size' => 'M', 'stock' => 8],
+                ],
+            ])
+            ->assertSessionHasErrors('variants.0.id');
+
+        $this->assertSame(4, $originalVariant->fresh()->stock);
+        $this->assertSame(6, $foreignVariant->fresh()->stock);
+        $this->assertSame(1, $product->variants()->count());
+    }
+
     public function test_edit_form_lists_the_existing_variants(): void
     {
         $variant = ProductVariant::factory()->create(['size' => '2 plazas', 'color' => 'Gris topo']);

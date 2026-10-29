@@ -10,11 +10,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property OrderStatus $status
+ */
 #[Fillable([
     'user_id', 'status', 'customer_name', 'cedula', 'email', 'phone',
     'delivery_method', 'address', 'city', 'notes',
     'items_count', 'subtotal', 'discount', 'discount_percent', 'shipping', 'total',
     'receipt_path', 'receipt_uploaded_at', 'admin_notes',
+    'checkout_key', 'stock_restored_at',
 ])]
 class Order extends Model
 {
@@ -41,6 +45,7 @@ class Order extends Model
         return [
             'status' => OrderStatus::class,
             'receipt_uploaded_at' => 'datetime',
+            'stock_restored_at' => 'datetime',
             'items_count' => 'integer',
             'subtotal' => 'integer',
             'discount' => 'integer',

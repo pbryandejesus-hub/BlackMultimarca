@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\UpdateOrderStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -45,33 +44,23 @@ class OrderController extends Controller
         return view('admin.orders.show', ['order' => $order->load(['items.product', 'user'])]);
     }
 
-    public function update(Request $request, Order $order): RedirectResponse
+    public function update(Request $request, Order $order, UpdateOrderStatus $updateOrderStatus): RedirectResponse
     {
         $validated = $request->validate([
             'status' => ['required', Rule::enum(OrderStatus::class)],
+            'reason' => [Rule::requiredIf(fn (): bool => $request->string('status')->toString() !== $order->status->value), 'nullable', 'string', 'max:500'],
             'admin_notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $newStatus = OrderStatus::from($validated['status']);
 
-        if ($order->status === OrderStatus::Cancelled && $newStatus !== OrderStatus::Cancelled) {
-            return back()->withErrors(['status' => 'Un pedido cancelado no se puede reabrir: su stock ya fue devuelto.']);
-        }
-
-        DB::transaction(function () use ($order, $newStatus, $validated): void {
-            if ($newStatus === OrderStatus::Cancelled && $order->status !== OrderStatus::Cancelled) {
-                foreach ($order->items as $item) {
-                    if ($item->product_variant_id) {
-                        ProductVariant::whereKey($item->product_variant_id)->increment('stock', $item->quantity);
-                    }
-                }
-            }
-
-            $order->update([
-                'status' => $newStatus,
-                'admin_notes' => $validated['admin_notes'] ?? null,
-            ]);
-        });
+        $order = $updateOrderStatus->handle(
+            $order,
+            $newStatus,
+            $request->user(),
+            $validated['reason'] ?? null,
+            $validated['admin_notes'] ?? null,
+        );
 
         return back()->with('status', "Pedido {$order->number} actualizado: {$newStatus->label()}.");
     }

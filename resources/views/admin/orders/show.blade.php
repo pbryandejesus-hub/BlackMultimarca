@@ -25,6 +25,9 @@
                                         @else
                                             <span class="font-medium">{{ $item->product_name }}</span>
                                         @endif
+                                        @if ($item->product_sku)
+                                            <span class="block text-xs text-muted">SKU: {{ $item->product_sku }}</span>
+                                        @endif
                                         <span class="block text-xs text-muted">{{ $item->variant_label }}</span>
                                     </td>
                                     <td class="py-3 text-right"><x-price :amount="$item->unit_price" /></td>
@@ -97,6 +100,10 @@
                             <option value="{{ $status->value }}" @selected($order->status === $status)>{{ $status->label() }}</option>
                         @endforeach
                     </select>
+                </label>
+                <label class="field-label">Motivo del cambio
+                    <input type="text" name="reason" value="{{ old('reason') }}" maxlength="500" class="field-input">
+                    @error('reason')<span class="text-sm text-red-700">{{ $message }}</span>@enderror
                 </label>
                 <label class="field-label">Notas internas
                     <textarea name="admin_notes" rows="3" class="field-input py-2.5">{{ old('admin_notes', $order->admin_notes) }}</textarea>

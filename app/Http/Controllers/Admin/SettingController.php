@@ -34,7 +34,7 @@ class SettingController extends Controller
             'bank_alias' => ['nullable', 'string', 'max:60'],
             'discount_min_items' => ['required', 'integer', 'min:0', 'max:100'],
             'discount_percent' => ['required', 'integer', 'min:0', 'max:90'],
-            'shipping_cost' => ['required', 'integer', 'min:0'],
+            'shipping_cost' => ['required', 'integer', 'min:0', 'max:'.PHP_INT_MAX],
             'reserve_hours' => ['required', 'integer', 'min:1', 'max:720'],
         ]);
 

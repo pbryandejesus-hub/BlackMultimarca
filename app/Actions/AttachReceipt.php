@@ -2,27 +2,35 @@
 
 namespace App\Actions;
 
-use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Guarda el comprobante de transferencia (en disco privado) y pasa el pedido a revisión.
+ * Stores a private receipt and delegates the locked order transition.
  */
 class AttachReceipt
 {
-    public function handle(Order $order, UploadedFile $receipt): void
+    public function __construct(private UpdateOrderStatus $updateOrderStatus) {}
+
+    public function handle(Order $order, UploadedFile $receipt, ?User $actor = null): void
     {
-        $previousPath = $order->receipt_path;
+        $newPath = $receipt->store('receipts', 'local');
 
-        $order->update([
-            'receipt_path' => $receipt->store('receipts', 'local'),
-            'receipt_uploaded_at' => now(),
-            'status' => OrderStatus::UnderReview,
-        ]);
+        if (! $newPath) {
+            throw ValidationException::withMessages(['receipt' => 'No se pudo guardar el comprobante. Intentá nuevamente.']);
+        }
 
-        if ($previousPath) {
+        try {
+            $previousPath = $this->updateOrderStatus->attachReceipt($order, $newPath, $actor);
+        } catch (\Throwable $exception) {
+            Storage::disk('local')->delete($newPath);
+            throw $exception;
+        }
+
+        if ($previousPath && $previousPath !== $newPath) {
             Storage::disk('local')->delete($previousPath);
         }
     }

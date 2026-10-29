@@ -23,6 +23,7 @@ class OrderItemFactory extends Factory
             'product_id' => null,
             'product_variant_id' => null,
             'product_name' => fake()->words(3, true),
+            'product_sku' => null,
             'variant_label' => 'Único',
             'unit_price' => 100000,
             'quantity' => 1,

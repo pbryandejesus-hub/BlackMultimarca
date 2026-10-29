@@ -21,6 +21,11 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index');
         }
 
+        $cart->checkoutKey();
+        $cart->setCheckoutSnapshot($summary['lines']->mapWithKeys(
+            fn (array $line): array => [$line['variant']->id => $line['unit_price']],
+        )->all());
+
         return view('checkout', [
             'summary' => $summary,
             'pickupSummary' => $cart->summary(Order::DELIVERY_PICKUP),
@@ -30,15 +35,19 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function store(CheckoutRequest $request, PlaceOrder $placeOrder): RedirectResponse
+    public function store(CheckoutRequest $request, PlaceOrder $placeOrder, Cart $cart): RedirectResponse
     {
         $order = $placeOrder->handle(
             $request->safe()->except('receipt'),
             $request->user(),
+            $cart->checkoutKey(),
             $request->file('receipt'),
         );
 
-        $request->session()->push('placed_orders', $order->id);
+        $request->session()->put(
+            'placed_orders',
+            collect($request->session()->get('placed_orders', []))->push($order->id)->unique()->values()->all(),
+        );
 
         return redirect()->route('orders.show', $order)->with('order_placed', true);
     }

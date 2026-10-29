@@ -1,5 +1,6 @@
 services:
   app:
+    image: blackmultimarca-development-app:local
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,10 +11,18 @@ services:
       # vendor/ vive en un volumen de Docker: leer miles de archivos desde un disco de Windows
       # (WSL / Docker Desktop) hacía que cada página tardara varios segundos.
       - vendor_data:/var/www/html/vendor
-    # Instala o actualiza las dependencias en el volumen (rápido si ya están) y levanta el servidor.
-    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
+    # Instala dependencias solo al inicializar el volumen; los cambios de lockfile se aplican manualmente.
+    command: sh -c "if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --prefer-dist; fi && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
     ports:
       - "8000:8000"
+    restart: unless-stopped
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8000/up') === false ? 1 : 0);"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     environment:
       APP_ENV: local
       PHP_CLI_SERVER_WORKERS: 4
@@ -46,6 +55,30 @@ services:
       timeout: 5s
       retries: 10
 
+  frontend:
+    image: node:22-alpine
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - node_modules_data:/var/www/html/node_modules
+    command: sh -c "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    init: true
+
+  scheduler:
+    image: blackmultimarca-development-app:local
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    command: ["php", "artisan", "schedule:work"]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+
 volumes:
   mysql_data:
   vendor_data:
+  node_modules_data:

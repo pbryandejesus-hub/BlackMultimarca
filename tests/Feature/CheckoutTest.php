@@ -35,16 +35,18 @@ class CheckoutTest extends TestCase
     {
         Setting::store(['discount_min_items' => 3, 'discount_percent' => 10]);
         $variant = ProductVariant::factory()
-            ->for(Product::factory()->state(['name' => 'Calza deportiva', 'price' => 120000]))
+            ->for(Product::factory()->state(['name' => 'Calza deportiva', 'sku' => 'CALZA-001', 'price' => 120000]))
             ->create(['size' => 'M', 'color' => 'Negro', 'stock' => 5]);
 
         $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 3]);
+        $this->get(route('checkout.create'))->assertOk();
         $response = $this->post(route('checkout.store'), $this->customerData());
 
         $order = Order::sole();
+        $variant->product->update(['name' => 'Nombre actualizado', 'sku' => 'CALZA-002']);
         $response->assertRedirect(route('orders.show', $order));
 
-        $this->assertSame('BM-000001', $order->number);
+        $this->assertSame(sprintf('BM-%06d', $order->id), $order->number);
         $this->assertSame(OrderStatus::PendingPayment, $order->status);
         $this->assertSame(360000, $order->subtotal);
         $this->assertSame(36000, $order->discount);
@@ -52,13 +54,43 @@ class CheckoutTest extends TestCase
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'product_name' => 'Calza deportiva',
+            'product_sku' => 'CALZA-001',
             'variant_label' => 'Negro · Talle M',
             'quantity' => 3,
+        ]);
+        $this->assertDatabaseHas('order_status_histories', [
+            'order_id' => $order->id,
+            'from_status' => null,
+            'to_status' => OrderStatus::PendingPayment->value,
+            'reason' => 'Pedido creado en checkout',
         ]);
         $this->assertSame(2, $variant->fresh()->stock);
         $this->assertNull(session('cart'));
 
-        $this->get(route('orders.show', $order))->assertOk()->assertSee('BM-000001')->assertSee('₲ 324.000');
+        $this->get(route('orders.show', $order))->assertOk()->assertSee($order->number)->assertSee('₲ 324.000');
+    }
+
+    public function test_checkout_uses_the_current_database_price_and_retries_are_idempotent(): void
+    {
+        $variant = ProductVariant::factory()->for(Product::factory()->state(['price' => 85000]))->create(['stock' => 3]);
+        $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 2]);
+        $this->get(route('checkout.create'))->assertSee('₲ 170.000');
+        $variant->product->update(['price' => 91000]);
+
+        $data = $this->customerData(['unit_price' => 1, 'total' => 1]);
+        $this->followingRedirects()
+            ->post(route('checkout.store'), $data)
+            ->assertOk()
+            ->assertSee('El precio de un producto cambió.')
+            ->assertSee('₲ 182.000');
+        $this->assertDatabaseCount('orders', 0);
+        $this->post(route('checkout.store'), $data)->assertRedirect();
+        $this->post(route('checkout.store'), $data)->assertRedirect();
+
+        $this->assertDatabaseCount('orders', 1);
+        $this->assertDatabaseCount('order_items', 1);
+        $this->assertSame(182000, Order::sole()->total);
+        $this->assertSame(1, $variant->fresh()->stock);
     }
 
     public function test_checkout_page_asks_for_cedula_and_shows_the_total(): void
@@ -77,6 +109,7 @@ class CheckoutTest extends TestCase
         Setting::store(['shipping_cost' => 25000]);
         $variant = ProductVariant::factory()->for(Product::factory()->state(['price' => 100000]))->create();
         $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->get(route('checkout.create'))->assertOk();
 
         $this->post(route('checkout.store'), $this->customerData(['delivery_method' => Order::DELIVERY_SHIPPING]))
             ->assertSessionHasErrors(['address', 'city']);
@@ -95,6 +128,7 @@ class CheckoutTest extends TestCase
     {
         $variant = ProductVariant::factory()->create();
         $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->get(route('checkout.create'))->assertOk();
 
         $this->post(route('checkout.store'), $this->customerData(['cedula' => 'abc123']))
             ->assertSessionHasErrors('cedula');
@@ -114,6 +148,7 @@ class CheckoutTest extends TestCase
         $variant = ProductVariant::factory()->create();
 
         $this->actingAs($user)->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->actingAs($user)->get(route('checkout.create'))->assertOk();
         $this->actingAs($user)->post(route('checkout.store'), $this->customerData());
 
         $order = Order::sole();
@@ -134,6 +169,7 @@ class CheckoutTest extends TestCase
         Storage::fake('local');
         $variant = ProductVariant::factory()->create();
         $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->get(route('checkout.create'))->assertOk();
         $this->post(route('checkout.store'), $this->customerData());
         $order = Order::sole();
 
@@ -156,5 +192,19 @@ class CheckoutTest extends TestCase
         ])->assertNotFound();
 
         $this->assertNull($order->fresh()->receipt_path);
+    }
+
+    public function test_checkout_rejects_a_receipt_that_is_not_an_allowed_file_type(): void
+    {
+        $variant = ProductVariant::factory()->create(['stock' => 2]);
+        $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->get(route('checkout.create'))->assertOk();
+
+        $this->post(route('checkout.store'), $this->customerData([
+            'receipt' => UploadedFile::fake()->create('program.exe', 20, 'application/x-msdownload'),
+        ]))->assertSessionHasErrors('receipt');
+
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(2, $variant->fresh()->stock);
     }
 }

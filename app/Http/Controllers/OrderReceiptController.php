@@ -18,10 +18,10 @@ class OrderReceiptController extends Controller
         }
 
         $validated = $request->validate([
-            'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.(int) config('services.receipts.max_kilobytes', 5120)],
         ], [], ['receipt' => 'comprobante']);
 
-        $attachReceipt->handle($order, $validated['receipt']);
+        $attachReceipt->handle($order, $validated['receipt'], $request->user());
 
         return redirect()->route('orders.show', $order)->with('status', 'Recibimos tu comprobante. Te avisamos cuando confirmemos el pago.');
     }

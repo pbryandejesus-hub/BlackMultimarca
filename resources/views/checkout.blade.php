@@ -2,6 +2,10 @@
     <div class="mx-auto max-w-7xl px-4 py-10 md:px-6">
         <h1 class="mb-8 font-display text-3xl font-medium md:text-4xl">Finalizar compra</h1>
 
+        @if ($errors->has('cart'))
+            <p role="alert" class="mb-6 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">{{ $errors->first('cart') }}</p>
+        @endif
+
         <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="flex flex-wrap items-start gap-10" novalidate>
             @csrf
 
