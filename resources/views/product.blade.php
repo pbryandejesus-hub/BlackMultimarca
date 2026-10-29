@@ -42,7 +42,9 @@
                 @endif
                 <div class="relative aspect-[4/5] grow overflow-hidden border border-line bg-sand">
                     @if ($product->images->isNotEmpty())
-                        <img src="{{ $product->images->first()->url() }}" alt="{{ $product->name }}" data-gallery-main class="h-full w-full object-cover">
+                        <button type="button" data-gallery-open aria-label="Ver foto en pantalla completa" class="block h-full w-full cursor-zoom-in">
+                            <img src="{{ $product->images->first()->url() }}" alt="{{ $product->name }}" data-gallery-main data-gallery-images='@json($product->images->map->url()->values())' class="h-full w-full object-cover transition-transform duration-200 ease-out">
+                        </button>
                     @else
                         <x-product-image :product="$product" />
                     @endif
@@ -168,6 +170,24 @@
             </section>
         @endif
     </div>
+
+    @if ($product->images->isNotEmpty())
+        <dialog data-lightbox aria-label="Fotos de {{ $product->name }}" class="m-0 h-dvh max-h-none w-screen max-w-none bg-ink/95 p-0 text-ivory">
+            <div class="relative flex h-full flex-col">
+                <div class="flex items-center justify-between px-5 py-3">
+                    <span data-lightbox-counter class="text-xs tracking-[0.2em] text-cream-muted" aria-live="polite"></span>
+                    <button type="button" data-lightbox-close class="h-11 w-11 text-3xl leading-none hover:text-gold" aria-label="Cerrar">×</button>
+                </div>
+                <div class="flex min-h-0 grow items-center justify-center px-4 pb-6 select-none">
+                    <img data-lightbox-image src="" alt="{{ $product->name }}" class="max-h-full max-w-full touch-pan-y object-contain">
+                </div>
+                @if ($product->images->count() > 1)
+                    <button type="button" data-lightbox-prev class="absolute top-1/2 left-2 h-14 w-12 -translate-y-1/2 text-4xl text-gold-light hover:text-gold md:left-6" aria-label="Foto anterior">‹</button>
+                    <button type="button" data-lightbox-next class="absolute top-1/2 right-2 h-14 w-12 -translate-y-1/2 text-4xl text-gold-light hover:text-gold md:right-6" aria-label="Foto siguiente">›</button>
+                @endif
+            </div>
+        </dialog>
+    @endif
 
     @if ($product->hasModel())
         <dialog data-model-dialog aria-label="Vista 3D de {{ $product->name }}" class="m-0 h-dvh max-h-none w-screen max-w-none bg-ivory p-0 text-coal">

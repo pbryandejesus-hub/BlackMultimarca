@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,6 +45,17 @@ class StorefrontTest extends TestCase
         $product = Product::factory()->withStock()->create(['price' => 150000]);
 
         $this->get(route('products.show', $product))->assertOk()->assertSee('₲ 150.000');
+    }
+
+    public function test_product_page_offers_every_photo_in_full_screen(): void
+    {
+        $product = Product::factory()->withStock()->create();
+        $images = ProductImage::factory()->for($product)->count(2)->sequence(['position' => 1], ['position' => 2])->create();
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee('data-lightbox', false)
+            ->assertSee(json_encode($images->map->url()->all(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), false);
     }
 
     public function test_product_with_a_3d_model_offers_the_3d_viewer(): void

@@ -18,15 +18,72 @@ function initToggles() {
     });
 }
 
+/**
+ * Galería de la ficha de producto: miniaturas, lupa al pasar el mouse y fotos en pantalla completa
+ * (flechas, teclado y deslizar con el dedo).
+ */
 function initGallery() {
     const main = $('[data-gallery-main]');
     if (!main) return;
 
-    $$('[data-gallery-thumb]').forEach((thumb) => {
-        thumb.addEventListener('click', () => {
-            main.src = thumb.dataset.galleryThumb;
-            $$('[data-gallery-thumb]').forEach((other) => other.setAttribute('aria-pressed', String(other === thumb)));
+    const images = JSON.parse(main.dataset.galleryImages || '[]');
+    const thumbs = $$('[data-gallery-thumb]');
+    let current = 0;
+
+    const show = (index) => {
+        current = index;
+        main.src = images[index];
+        thumbs.forEach((thumb, thumbIndex) => thumb.setAttribute('aria-pressed', String(thumbIndex === index)));
+    };
+
+    thumbs.forEach((thumb, index) => thumb.addEventListener('click', () => show(index)));
+
+    const opener = $('[data-gallery-open]');
+
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        opener.addEventListener('mousemove', (event) => {
+            const box = opener.getBoundingClientRect();
+            main.style.transformOrigin = `${((event.clientX - box.left) / box.width) * 100}% ${((event.clientY - box.top) / box.height) * 100}%`;
+            main.style.transform = 'scale(2)';
         });
+        opener.addEventListener('mouseleave', () => (main.style.transform = ''));
+    }
+
+    const lightbox = $('[data-lightbox]');
+    if (!lightbox) return;
+
+    const lightboxImage = $('[data-lightbox-image]', lightbox);
+    const counter = $('[data-lightbox-counter]', lightbox);
+
+    const showInLightbox = (index) => {
+        show((index + images.length) % images.length);
+        lightboxImage.src = images[current];
+        counter.textContent = `${current + 1} / ${images.length}`;
+    };
+
+    opener.addEventListener('click', () => {
+        main.style.transform = '';
+        showInLightbox(current);
+        lightbox.showModal();
+    });
+
+    $('[data-lightbox-close]', lightbox).addEventListener('click', () => lightbox.close());
+    $('[data-lightbox-prev]', lightbox)?.addEventListener('click', () => showInLightbox(current - 1));
+    $('[data-lightbox-next]', lightbox)?.addEventListener('click', () => showInLightbox(current + 1));
+
+    lightbox.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') showInLightbox(current - 1);
+        if (event.key === 'ArrowRight') showInLightbox(current + 1);
+    });
+
+    let touchStartX = null;
+    lightboxImage.addEventListener('touchstart', (event) => (touchStartX = event.touches[0].clientX), { passive: true });
+    lightboxImage.addEventListener('touchend', (event) => {
+        if (touchStartX === null || images.length < 2) return;
+
+        const distance = event.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(distance) > 50) showInLightbox(current + (distance < 0 ? 1 : -1));
+        touchStartX = null;
     });
 }
 
