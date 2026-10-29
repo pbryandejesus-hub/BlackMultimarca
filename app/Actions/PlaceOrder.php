@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\OrderStatus;
+use App\Mail\OrderPlaced;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -11,8 +12,10 @@ use App\Support\Cart;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Convierte el carrito en un pedido, descontando el stock dentro de una transacción.
@@ -138,7 +141,7 @@ class PlaceOrder
             $this->cart->clear();
 
             return $existingOrder;
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             if ($storedReceiptPath) {
                 Storage::disk('local')->delete($storedReceiptPath);
             }
@@ -151,7 +154,14 @@ class PlaceOrder
         }
 
         $this->cart->clear();
+        $order->refresh();
 
-        return $order->refresh();
+        try {
+            Mail::to($order->email)->send(new OrderPlaced($order));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
+        return $order;
     }
 }

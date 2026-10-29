@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\UpdateOrderStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
+use App\Mail\OrderStatusChanged;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class OrderController extends Controller
 {
@@ -54,6 +57,8 @@ class OrderController extends Controller
 
         $newStatus = OrderStatus::from($validated['status']);
 
+        $statusChanged = $order->status !== $newStatus;
+
         $order = $updateOrderStatus->handle(
             $order,
             $newStatus,
@@ -61,6 +66,10 @@ class OrderController extends Controller
             $validated['reason'] ?? null,
             $validated['admin_notes'] ?? null,
         );
+
+        if ($statusChanged && filled($order->email)) {
+            $this->notifyCustomer($order);
+        }
 
         return back()->with('status', "Pedido {$order->number} actualizado: {$newStatus->label()}.");
     }
@@ -72,5 +81,17 @@ class OrderController extends Controller
         $extension = pathinfo($order->receipt_path, PATHINFO_EXTENSION);
 
         return Storage::disk('local')->response($order->receipt_path, "comprobante-{$order->number}.{$extension}");
+    }
+
+    /**
+     * Avisa al cliente por email. Un fallo del servidor de correo no debe impedir guardar el cambio de estado.
+     */
+    private function notifyCustomer(Order $order): void
+    {
+        try {
+            Mail::to($order->email)->send(new OrderStatusChanged($order->load('items')));
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }

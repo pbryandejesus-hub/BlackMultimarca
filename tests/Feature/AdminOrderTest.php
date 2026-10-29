@@ -3,12 +3,14 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Mail\OrderStatusChanged;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -144,5 +146,37 @@ class AdminOrderTest extends TestCase
 
         $order = Order::factory()->create();
         $this->actingAs($admin)->get(route('orders.show', $order))->assertSee('Banco Ejemplo')->assertSee('4567890');
+    }
+
+    public function test_customer_is_emailed_when_the_order_status_changes(): void
+    {
+        Mail::fake();
+        $order = Order::factory()->status(OrderStatus::UnderReview)
+            ->has(OrderItem::factory()->state(['product_name' => 'Toallón de algodón']), 'items')
+            ->create(['email' => 'ana@example.com']);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->patch(route('admin.orders.update', $order), ['status' => OrderStatus::Paid->value, 'reason' => 'Transferencia verificada.'])
+            ->assertSessionHasNoErrors();
+
+        Mail::assertSent(OrderStatusChanged::class, function (OrderStatusChanged $mail) use ($order): bool {
+            $mail->assertHasSubject("Tu pedido {$order->number}: Pago confirmado")
+                ->assertSeeInHtml('Confirmamos tu pago')
+                ->assertSeeInHtml('Toallón de algodón');
+
+            return $mail->hasTo('ana@example.com');
+        });
+    }
+
+    public function test_saving_notes_without_changing_the_status_sends_no_email(): void
+    {
+        Mail::fake();
+        $order = Order::factory()->status(OrderStatus::Paid)->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->patch(route('admin.orders.update', $order), ['status' => OrderStatus::Paid->value, 'admin_notes' => 'Llamar antes'])
+            ->assertSessionHasNoErrors();
+
+        Mail::assertNothingSent();
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Mail\OrderPlaced;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -10,6 +11,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -206,5 +208,27 @@ class CheckoutTest extends TestCase
 
         $this->assertDatabaseCount('orders', 0);
         $this->assertSame(2, $variant->fresh()->stock);
+    }
+
+    public function test_customer_receives_the_order_and_transfer_details_by_email(): void
+    {
+        Mail::fake();
+        Setting::store(['bank_name' => 'Banco Itaú', 'bank_account' => '123456789']);
+        $variant = ProductVariant::factory()
+            ->for(Product::factory()->state(['name' => 'Calza deportiva', 'price' => 120000]))
+            ->create(['stock' => 5]);
+
+        $this->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 1]);
+        $this->get(route('checkout.create'))->assertOk();
+        $this->post(route('checkout.store'), $this->customerData());
+
+        Mail::assertSent(OrderPlaced::class, function (OrderPlaced $mail): bool {
+            $mail->assertSeeInHtml('BM-000001')
+                ->assertSeeInHtml('Calza deportiva')
+                ->assertSeeInHtml('Banco Itaú')
+                ->assertSeeInHtml('123456789');
+
+            return $mail->hasTo('maria@example.com');
+        });
     }
 }
