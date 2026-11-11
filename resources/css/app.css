@@ -73,6 +73,40 @@
     @apply text-xs font-medium text-red-700;
 }
 
+/* Variante a la que se llega desde "Poco stock": destella dos veces y queda marcada con borde dorado. La sombra hace de relleno sin mover el diseño. */
+@keyframes variant-highlight {
+    0% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0.75rem transparent;
+        outline-color: transparent;
+    }
+    20%,
+    60% {
+        background-color: color-mix(in oklab, var(--color-gold) 65%, transparent);
+        box-shadow: 0 0 0 0.75rem color-mix(in oklab, var(--color-gold) 65%, transparent);
+        outline-color: var(--color-gold);
+    }
+    40% {
+        background-color: color-mix(in oklab, var(--color-gold) 30%, transparent);
+        box-shadow: 0 0 0 0.75rem color-mix(in oklab, var(--color-gold) 30%, transparent);
+    }
+    100% {
+        background-color: color-mix(in oklab, var(--color-gold) 35%, transparent);
+        box-shadow: 0 0 0 0.75rem color-mix(in oklab, var(--color-gold) 35%, transparent);
+        outline-color: var(--color-gold);
+    }
+}
+
+@utility variant-highlight {
+    outline: 2px solid transparent;
+    outline-offset: 0.75rem;
+    animation: variant-highlight 2.2s ease-out forwards;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation-duration: 1ms;
+    }
+}
+
 @utility card {
     @apply border border-line bg-white;
 }

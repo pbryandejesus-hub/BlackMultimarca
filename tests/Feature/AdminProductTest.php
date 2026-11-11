@@ -94,6 +94,20 @@ class AdminProductTest extends TestCase
             ->assertSee('value="Gris topo"', false);
     }
 
+    public function test_low_stock_entry_links_to_its_variant_row_in_the_edit_form(): void
+    {
+        $variant = ProductVariant::factory()->create(['stock' => 0]);
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertSee(route('admin.products.edit', $variant->product).'#variante-'.$variant->id, false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.products.edit', $variant->product))
+            ->assertSee('data-variant-id="'.$variant->id.'"', false);
+    }
+
     public function test_a_product_needs_at_least_one_variant(): void
     {
         $this->actingAs(User::factory()->admin()->create())->post(route('admin.products.store'), [

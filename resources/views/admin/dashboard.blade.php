@@ -47,7 +47,7 @@
             <ul class="divide-y divide-line text-sm">
                 @forelse ($lowStockVariants as $variant)
                     <li class="flex items-center justify-between gap-3 px-5 py-3">
-                        <a href="{{ route('admin.products.edit', $variant->product) }}" class="hover:text-bronze">
+                        <a href="{{ route('admin.products.edit', $variant->product) }}#variante-{{ $variant->id }}" class="hover:text-bronze">
                             {{ $variant->product->name }} <span class="text-muted">· {{ $variant->label() }}</span>
                         </a>
                         <span @class(['font-semibold', 'text-red-700' => $variant->stock === 0])>{{ $variant->stock }}</span>

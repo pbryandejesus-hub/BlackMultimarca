@@ -214,6 +214,31 @@ function initVariantRows() {
     });
 }
 
+/**
+ * Panel de administración: al llegar desde "Poco stock" (#variante-ID) baja suave hasta esa variante,
+ * la ilumina y enfoca su stock. La fila no tiene id para que el navegador no salte de golpe.
+ */
+function initTargetedVariant() {
+    const variantId = location.hash.match(/^#variante-(\d+)$/)?.[1];
+    const row = variantId && $(`[data-variant-id="${variantId}"]`);
+    if (!row) return;
+
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stockInput = $('[data-variant-stock]', row);
+
+    setTimeout(() => {
+        row.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        setTimeout(
+            () => {
+                row.classList.add('variant-highlight');
+                stockInput?.focus({ preventScroll: true });
+                stockInput?.select();
+            },
+            reduceMotion ? 0 : 600,
+        );
+    }, 300);
+}
+
 function initConfirmations() {
     $$('form[data-confirm]').forEach((form) => {
         form.addEventListener('submit', (event) => {
@@ -230,5 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCopyButtons();
     initDeliveryOptions();
     initVariantRows();
+    initTargetedVariant();
     initConfirmations();
 });
