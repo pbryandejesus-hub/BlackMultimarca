@@ -99,11 +99,7 @@ class CatalogController extends Controller
             ->with(['images', 'brand', 'category'])
             ->when($category, fn (Builder $query) => $query->whereBelongsTo($category))
             ->when($brand, fn (Builder $query) => $query->whereBelongsTo($brand))
-            ->when($search !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($search): void {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            }))
+            ->when($search !== '', fn (Builder $query) => $query->matching($search))
             ->when($size !== '', fn (Builder $query) => $query->whereHas('variants', fn (Builder $query) => $query->where('size', $size)->where('stock', '>', 0)))
             ->orderBy($sortColumn, $sortDirection)
             ->paginate(12)

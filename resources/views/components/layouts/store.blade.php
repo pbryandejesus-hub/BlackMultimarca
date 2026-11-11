@@ -42,10 +42,11 @@
             </nav>
 
             <div class="flex items-center gap-1">
-                <form action="{{ route('catalog') }}" method="GET" role="search" class="hidden h-10 items-center rounded-full border border-edge bg-[#161616] px-3.5 md:flex">
+                <form action="{{ route('catalog') }}" method="GET" role="search" class="relative hidden h-10 items-center rounded-full border border-edge bg-[#161616] px-3.5 md:flex">
                     <label for="header-search" class="sr-only">Buscar productos</label>
                     <svg aria-hidden="true" class="h-4 w-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-                    <input id="header-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" class="ml-2 w-40 border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
+                    <input id="header-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="header-search-list" data-search-suggest="{{ route('search.suggestions') }}" class="ml-2 w-40 border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
+                    <ul id="header-search-list" role="listbox" aria-label="Sugerencias" hidden class="absolute top-full right-0 z-40 mt-2 w-80 overflow-hidden border border-line bg-white text-coal shadow-xl"></ul>
                 </form>
 
                 @auth
@@ -82,8 +83,9 @@
         <div id="mobile-menu" class="hidden max-h-[calc(100dvh-5rem)] overflow-y-auto border-t border-edge px-4 pb-5 lg:hidden">
             <form action="{{ route('catalog') }}" method="GET" role="search" class="mt-4 flex h-11 items-center rounded-full border border-edge bg-[#161616] px-4">
                 <label for="mobile-search" class="sr-only">Buscar productos</label>
-                <input id="mobile-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" class="w-full border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
+                <input id="mobile-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mobile-search-list" data-search-suggest="{{ route('search.suggestions') }}" class="w-full border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
             </form>
+            <ul id="mobile-search-list" role="listbox" aria-label="Sugerencias" hidden class="mt-2 border border-line bg-white text-coal"></ul>
             <nav aria-label="Categorías (móvil)" class="mt-4 flex flex-col text-sm font-medium tracking-[0.14em] uppercase">
                 <a href="{{ route('new-arrivals') }}" class="border-b border-edge py-3 text-cream">Novedades</a>
                 @foreach ($navCategories as $navCategory)

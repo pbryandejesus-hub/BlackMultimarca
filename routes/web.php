@@ -15,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderReceiptController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\StockAlertController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,7 @@ Route::get('/categorias', [CategoryController::class, 'index'])->name('categorie
 Route::get('/categoria/{category}', [CatalogController::class, 'category'])->name('categories.show');
 Route::get('/marcas', [BrandController::class, 'index'])->name('brands.index');
 Route::get('/marca/{brand}', [CatalogController::class, 'brand'])->name('brands.show');
+Route::get('/buscar/sugerencias', SearchSuggestionController::class)->middleware('throttle:60,1')->name('search.suggestions');
 Route::get('/producto/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/ayuda/{page}', [PageController::class, 'show'])->name('pages.show');
 Route::post('/avisarme', [StockAlertController::class, 'store'])->middleware('throttle:10,1')->name('stock-alerts.store');

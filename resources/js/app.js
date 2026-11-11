@@ -320,6 +320,133 @@ function initDialogs() {
     });
 }
 
+/**
+ * Buscador con sugerencias: mientras se escribe muestra productos con foto y precio.
+ * Se maneja con flechas, Enter y Esc; Enter sin elegir nada busca normalmente.
+ */
+function initSearchSuggestions() {
+    $$('[data-search-suggest]').forEach((input) => {
+        const list = document.getElementById(input.getAttribute('aria-controls'));
+        if (!list) return;
+
+        let timer;
+        let controller;
+        let activeIndex = -1;
+
+        const options = () => $$('[role="option"]', list);
+        const close = () => {
+            list.hidden = true;
+            input.setAttribute('aria-expanded', 'false');
+            input.removeAttribute('aria-activedescendant');
+            activeIndex = -1;
+        };
+        const highlight = (index) => {
+            const items = options();
+            activeIndex = (index + items.length) % items.length;
+            items.forEach((item, position) => {
+                item.setAttribute('aria-selected', String(position === activeIndex));
+                item.classList.toggle('bg-sand', position === activeIndex);
+            });
+            input.setAttribute('aria-activedescendant', items[activeIndex].id);
+        };
+
+        const option = (id, href, children) => {
+            const item = document.createElement('li');
+            item.id = id;
+            item.setAttribute('role', 'option');
+            item.setAttribute('aria-selected', 'false');
+            const link = document.createElement('a');
+            link.href = href;
+            link.tabIndex = -1;
+            link.className = 'flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-sand';
+            link.append(...children);
+            item.append(link);
+            return item;
+        };
+
+        const text = (content, className) => {
+            const element = document.createElement('span');
+            element.className = className;
+            element.textContent = content;
+            return element;
+        };
+
+        const render = (products, term) => {
+            const searchUrl = `${input.form.action}?q=${encodeURIComponent(term)}`;
+            const items = products.map((product, index) => {
+                const thumb = document.createElement(product.image ? 'img' : 'span');
+                thumb.className = 'h-14 w-11 shrink-0 bg-sand object-cover';
+                if (product.image) {
+                    thumb.src = product.image;
+                    thumb.alt = '';
+                }
+                const details = document.createElement('span');
+                details.className = 'flex min-w-0 flex-col';
+                details.append(
+                    text(product.name, 'truncate font-medium'),
+                    text([product.brand, product.price].filter(Boolean).join(' · '), 'text-xs text-muted'),
+                );
+                return option(`${list.id}-${index}`, product.url, [thumb, details]);
+            });
+
+            if (!items.length) {
+                items.push(option(`${list.id}-empty`, searchUrl, [text(`Sin coincidencias para “${term}”`, 'text-muted')]));
+            }
+            const all = option(`${list.id}-all`, searchUrl, [text(`Ver todos los resultados para “${term}”`, 'font-semibold text-bronze')]);
+            all.classList.add('border-t', 'border-line');
+
+            list.replaceChildren(...items, all);
+            list.hidden = false;
+            input.setAttribute('aria-expanded', 'true');
+            activeIndex = -1;
+        };
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            const term = input.value.trim();
+            if (term.length < 2) {
+                close();
+                return;
+            }
+
+            timer = setTimeout(async () => {
+                controller?.abort();
+                controller = new AbortController();
+                try {
+                    const response = await fetch(`${input.dataset.searchSuggest}?q=${encodeURIComponent(term)}`, {
+                        headers: { Accept: 'application/json' },
+                        signal: controller.signal,
+                    });
+                    if (!response.ok) return;
+                    const { products } = await response.json();
+                    if (input.value.trim() === term) render(products, term);
+                } catch {
+                    // Sin sugerencias si falla la red; el buscador sigue funcionando con Enter.
+                }
+            }, 200);
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (list.hidden) return;
+
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                highlight(activeIndex + (event.key === 'ArrowDown' ? 1 : -1));
+            } else if (event.key === 'Enter' && activeIndex >= 0) {
+                event.preventDefault();
+                location.href = $('a', options()[activeIndex]).href;
+            } else if (event.key === 'Escape') {
+                close();
+            }
+        });
+
+        input.form.addEventListener('focusout', (event) => {
+            if (!input.form.contains(event.relatedTarget) && !list.contains(event.relatedTarget)) close();
+        });
+        list.addEventListener('mousedown', (event) => event.preventDefault());
+    });
+}
+
 function initCopyButtons() {
     $$('[data-copy]').forEach((button) => {
         const original = button.textContent;
@@ -490,6 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCartDrawer();
     initFavorites();
     initDialogs();
+    initSearchSuggestions();
     initCopyButtons();
     initDeliveryOptions();
     initVariantRows();

@@ -82,6 +82,19 @@ class Product extends Model
     }
 
     /**
+     * Productos cuyo nombre, descripción o código contienen el texto buscado.
+     */
+    #[Scope]
+    protected function matching(Builder $query, string $term): Builder
+    {
+        return $query->where(function (Builder $query) use ($term): void {
+            $query->where('name', 'like', "%{$term}%")
+                ->orWhere('description', 'like', "%{$term}%")
+                ->orWhere('sku', 'like', "%{$term}%");
+        });
+    }
+
+    /**
      * Stock total de todas las variantes. Usa la suma precalculada con withSum() si está disponible.
      */
     public function totalStock(): int
