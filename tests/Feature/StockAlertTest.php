@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Mail\BackInStock;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -16,48 +15,84 @@ class StockAlertTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_customer_asks_to_be_notified_for_a_sold_out_variant(): void
+    public function test_customer_leaves_whatsapp_or_email_for_a_sold_out_variant(): void
     {
         $variant = ProductVariant::factory()->create(['stock' => 0, 'size' => 'M']);
 
         $this->from(route('products.show', $variant->product))
-            ->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'email' => 'Ana@Example.com'])
+            ->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'contact' => '0981 123 456'])
             ->assertRedirect(route('products.show', $variant->product))
             ->assertSessionHas('status');
 
-        $this->assertDatabaseHas('stock_alerts', ['product_variant_id' => $variant->id, 'email' => 'ana@example.com', 'notified_at' => null]);
+        $this->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'contact' => 'Ana@Example.com']);
+
+        $this->assertDatabaseHas('stock_alerts', ['product_variant_id' => $variant->id, 'contact' => '0981 123 456', 'notified_at' => null]);
+        $this->assertDatabaseHas('stock_alerts', ['product_variant_id' => $variant->id, 'contact' => 'ana@example.com']);
+    }
+
+    public function test_contact_must_be_a_phone_or_an_email(): void
+    {
+        $variant = ProductVariant::factory()->create(['stock' => 0]);
+
+        $this->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'contact' => 'avisame porfa'])
+            ->assertSessionHasErrors('contact');
+
+        $this->assertDatabaseCount('stock_alerts', 0);
     }
 
     public function test_no_alert_is_created_for_a_variant_with_stock(): void
     {
         $variant = ProductVariant::factory()->create(['stock' => 4]);
 
-        $this->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'email' => 'ana@example.com'])
+        $this->post(route('stock-alerts.store'), ['variant_id' => $variant->id, 'contact' => 'ana@example.com'])
             ->assertSessionHas('status', 'Esa combinación ya tiene stock: podés agregarla al carrito.');
 
         $this->assertDatabaseCount('stock_alerts', 0);
     }
 
-    public function test_restocking_from_the_panel_emails_pending_alerts_once(): void
+    public function test_admin_sees_pending_interested_customers_and_marks_them_as_notified(): void
     {
         Mail::fake();
         $variant = ProductVariant::factory()->create(['stock' => 0, 'size' => 'S']);
-        $pending = StockAlert::factory()->for($variant, 'variant')->create(['email' => 'ana@example.com']);
-        StockAlert::factory()->for($variant, 'variant')->notified()->create(['email' => 'ya-avisado@example.com']);
+        $phoneAlert = StockAlert::factory()->for($variant, 'variant')->create(['contact' => '0981 123456']);
+        StockAlert::factory()->for($variant, 'variant')->notified()->create(['contact' => 'ya-avisado@example.com']);
         $admin = User::factory()->admin()->create();
-        $update = fn (int $stock) => $this->actingAs($admin)->put(route('admin.products.update', $variant->product), [
-            'category_id' => $variant->product->category_id,
-            'name' => $variant->product->name,
-            'price' => $variant->product->price,
-            'variants' => [['id' => $variant->id, 'size' => 'S', 'stock' => $stock]],
-        ]);
 
-        $update(5)->assertSessionHasNoErrors();
-        $update(8)->assertSessionHasNoErrors();
+        $this->actingAs($admin)
+            ->get(route('admin.products.edit', $variant->product))
+            ->assertSee('Interesados en reposición')
+            ->assertSee('0981 123456')
+            ->assertSee('https://wa.me/595981123456', false)
+            ->assertDontSee('ya-avisado@example.com');
 
-        Mail::assertQueuedCount(1);
-        Mail::assertQueued(BackInStock::class, fn (BackInStock $mail) => $mail->hasTo('ana@example.com'));
-        $this->assertNotNull($pending->fresh()->notified_at);
+        $this->actingAs($admin)->get(route('admin.dashboard'))->assertSee('1 interesado');
+
+        $this->actingAs($admin)
+            ->patch(route('admin.stock-alerts.update', $phoneAlert))
+            ->assertSessionHas('status');
+
+        $this->assertNotNull($phoneAlert->fresh()->notified_at);
+        Mail::assertNothingOutgoing();
+    }
+
+    public function test_admin_removes_an_interested_customer(): void
+    {
+        $alert = StockAlert::factory()->create();
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->delete(route('admin.stock-alerts.destroy', $alert))
+            ->assertSessionHas('status');
+
+        $this->assertModelMissing($alert);
+    }
+
+    public function test_customers_cannot_manage_interested_lists(): void
+    {
+        $alert = StockAlert::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->patch(route('admin.stock-alerts.update', $alert))
+            ->assertForbidden();
     }
 
     public function test_product_page_offers_the_alert_form_for_sold_out_combinations(): void

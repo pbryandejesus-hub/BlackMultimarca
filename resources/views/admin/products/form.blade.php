@@ -132,6 +132,52 @@
             </form>
         @endforeach
 
+        @php
+            $pendingAlerts = $product->variants->flatMap->stockAlerts->whereNull('notified_at');
+        @endphp
+        <section id="interesados" class="card mt-6 flex flex-col gap-4 p-6">
+            <div>
+                <h2 class="font-display text-lg font-semibold">Interesados en reposición</h2>
+                <p class="text-sm text-muted">Clientes que tocaron "Avisarme cuando vuelva" en un talle o color agotado. Cuando cargues stock, escribiles y marcalos como avisados.</p>
+            </div>
+            @if ($pendingAlerts->isEmpty())
+                <p class="text-sm text-muted">Nadie está esperando reposición de este producto.</p>
+            @else
+                <ul class="divide-y divide-line border-y border-line text-sm">
+                    @foreach ($pendingAlerts as $alert)
+                        @php
+                            $alertVariant = $product->variants->firstWhere('id', $alert->product_variant_id);
+                            $alertMessage = "¡Hola! Te escribimos de Black Multimarca: volvió {$product->name} ({$alertVariant->label()}). Lo podés ver acá: ".route('products.show', $product);
+                        @endphp
+                        <li class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+                            <div class="flex min-w-48 grow flex-col">
+                                <span class="font-medium">{{ $alert->contact }}</span>
+                                <span class="text-xs text-muted">
+                                    {{ $alertVariant->label() }} · lo pidió el {{ $alert->created_at->format('d/m/Y') }} ·
+                                    <span @class(['font-semibold', 'text-emerald-700' => $alertVariant->stock > 0, 'text-red-700' => $alertVariant->stock < 1])>{{ $alertVariant->stock > 0 ? "ya hay {$alertVariant->stock} en stock" : 'sigue sin stock' }}</span>
+                                </span>
+                            </div>
+                            @if ($alert->isEmail())
+                                <a href="mailto:{{ $alert->contact }}?subject={{ rawurlencode('Volvió '.$product->name) }}&body={{ rawurlencode($alertMessage) }}" class="btn-outline min-h-9 px-4">Escribir email</a>
+                            @else
+                                <a href="{{ $alert->whatsappUrl($alertMessage) }}" target="_blank" rel="noopener" class="btn-outline min-h-9 px-4">Escribir por WhatsApp</a>
+                            @endif
+                            <form method="POST" action="{{ route('admin.stock-alerts.update', $alert) }}">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn-dark min-h-9 px-4">Marcar avisado</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.stock-alerts.destroy', $alert) }}" data-confirm="¿Quitar a {{ $alert->contact }} de la lista?">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-xs text-red-700 hover:underline">Quitar</button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </section>
+
         <form method="POST" action="{{ route('admin.products.destroy', $product) }}" data-confirm="¿Eliminar este producto? Esta acción no se puede deshacer." class="mt-10 border-t border-line pt-6">
             @csrf
             @method('DELETE')

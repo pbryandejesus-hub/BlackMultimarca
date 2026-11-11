@@ -69,6 +69,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('pedidos/{order}', [Admin\OrderController::class, 'show'])->name('orders.show');
     Route::patch('pedidos/{order}', [Admin\OrderController::class, 'update'])->name('orders.update');
     Route::get('pedidos/{order}/comprobante', [Admin\OrderController::class, 'receipt'])->name('orders.receipt');
+    Route::patch('interesados/{stockAlert}', [Admin\StockAlertController::class, 'update'])->name('stock-alerts.update');
+    Route::delete('interesados/{stockAlert}', [Admin\StockAlertController::class, 'destroy'])->name('stock-alerts.destroy');
     Route::get('configuracion', [Admin\SettingController::class, 'edit'])->name('settings.edit');
     Route::put('configuracion', [Admin\SettingController::class, 'update'])->name('settings.update');
 });

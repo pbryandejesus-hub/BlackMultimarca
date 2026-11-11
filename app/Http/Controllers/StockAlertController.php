@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductVariant;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,14 @@ class StockAlertController extends Controller
     {
         $validated = $request->validate([
             'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'email' => ['required', 'email', 'max:255'],
+            'contact' => ['required', 'string', 'max:120', function (string $attribute, string $value, Closure $fail): void {
+                $isEmail = filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+                $isPhone = preg_match('/^\+?[\d\s\-()]{6,20}$/', $value) === 1;
+
+                if (! $isEmail && ! $isPhone) {
+                    $fail('Escribí un número de WhatsApp o un email válido.');
+                }
+            }],
         ], [
             'variant_id.required' => 'Elegí el talle y color que querés que te avisemos.',
         ]);
@@ -25,11 +33,10 @@ class StockAlertController extends Controller
             return back()->with('status', 'Esa combinación ya tiene stock: podés agregarla al carrito.');
         }
 
-        $variant->stockAlerts()->updateOrCreate(
-            ['email' => strtolower($validated['email'])],
-            ['notified_at' => null],
-        );
+        $contact = trim(mb_strtolower($validated['contact']));
 
-        return back()->with('status', "Listo, te avisamos a {$validated['email']} cuando vuelva {$variant->product->name} ({$variant->label()}).");
+        $variant->stockAlerts()->updateOrCreate(['contact' => $contact], ['notified_at' => null]);
+
+        return back()->with('status', "Listo, te avisamos a {$contact} cuando vuelva {$variant->product->name} ({$variant->label()}).");
     }
 }

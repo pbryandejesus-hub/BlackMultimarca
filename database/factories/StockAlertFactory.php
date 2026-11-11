@@ -20,7 +20,7 @@ class StockAlertFactory extends Factory
     {
         return [
             'product_variant_id' => ProductVariant::factory(),
-            'email' => fake()->unique()->safeEmail(),
+            'contact' => fake()->unique()->safeEmail(),
             'notified_at' => null,
         ];
     }

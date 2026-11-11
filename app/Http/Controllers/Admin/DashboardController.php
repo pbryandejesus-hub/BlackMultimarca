@@ -30,8 +30,10 @@ class DashboardController extends Controller
             'monthAverageTicket' => (int) round($monthOrders->avg('total') ?? 0),
             'activeProductsCount' => Product::active()->count(),
             'lowStockVariants' => ProductVariant::with('product')
+                ->withCount(['stockAlerts as pending_alerts_count' => fn ($query) => $query->pending()])
                 ->where('stock', '<=', 2)
                 ->whereHas('product', fn ($query) => $query->active())
+                ->orderByDesc('pending_alerts_count')
                 ->orderBy('stock')
                 ->take(10)
                 ->get(),
