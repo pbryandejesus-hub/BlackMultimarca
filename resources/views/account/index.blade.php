@@ -5,10 +5,13 @@
                 <span class="eyebrow">Mi cuenta</span>
                 <h1 class="mt-2 font-display text-3xl font-medium">Hola, {{ auth()->user()->name }}</h1>
             </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="btn-outline">Cerrar sesión</button>
-            </form>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('favorites.index') }}" class="btn-dark">Mis favoritos</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn-outline">Cerrar sesión</button>
+                </form>
+            </div>
         </div>
 
         <h2 class="mb-4 font-display text-xl font-semibold">Mis pedidos</h2>

@@ -52,6 +52,9 @@
                     @if (auth()->user()->is_admin)
                         <a href="{{ route('admin.dashboard') }}" class="hidden px-2 text-[11px] font-semibold tracking-[0.16em] text-gold uppercase hover:text-gold-light sm:inline">Panel</a>
                     @endif
+                    <a href="{{ route('favorites.index') }}" class="flex h-11 w-11 items-center justify-center text-gold-light hover:text-gold" aria-label="Mis favoritos">
+                        <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+                    </a>
                     <a href="{{ route('account.index') }}" class="flex h-11 w-11 items-center justify-center text-gold-light hover:text-gold" aria-label="Mi cuenta">
                         <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
                     </a>
@@ -92,6 +95,7 @@
             <div class="mt-3 flex gap-3">
                 @auth
                     <a href="{{ route('account.index') }}" class="btn-outline-gold grow">Mi cuenta</a>
+                    <a href="{{ route('favorites.index') }}" class="btn-outline-gold grow">Favoritos</a>
                 @else
                     <a href="{{ route('login') }}" class="btn-outline-gold grow">Ingresar</a>
                     <a href="{{ route('register') }}" class="btn-gold grow">Crear cuenta</a>

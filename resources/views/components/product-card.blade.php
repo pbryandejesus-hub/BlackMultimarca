@@ -1,6 +1,6 @@
 @props(['product', 'badge' => null])
 
-<article {{ $attributes->merge(['class' => 'card group flex flex-col']) }}>
+<article {{ $attributes->merge(['class' => 'card group relative flex flex-col']) }}>
     <a href="{{ route('products.show', $product) }}" class="relative block aspect-[4/5] overflow-hidden bg-sand">
         <x-product-image :product="$product" class="transition-transform duration-500 group-hover:scale-105" />
         @if ($product->images->count() > 1)
@@ -10,12 +10,13 @@
             <span class="absolute top-3 left-3 bg-ink px-2.5 py-1.5 text-[10px] font-semibold tracking-[0.16em] text-gold uppercase">{{ $badge }}</span>
         @endif
         @if ($product->hasModel())
-            <span class="absolute top-3 right-3 flex items-center gap-1 bg-ivory/90 px-2 py-1.5 text-[10px] font-semibold tracking-[0.16em] text-bronze" title="Disponible en 3D">
+            <span class="absolute bottom-3 left-3 flex items-center gap-1 bg-ivory/90 px-2 py-1.5 text-[10px] font-semibold tracking-[0.16em] text-bronze" title="Disponible en 3D">
                 <x-icon-cube class="h-3.5 w-3.5" />
                 3D
             </span>
         @endif
     </a>
+    <x-favorite-button :product="$product" class="absolute top-3 right-3" />
     <div class="flex grow flex-col gap-1.5 p-4">
         <span class="text-[11px] tracking-[0.2em] text-bronze uppercase">
             {{ $product->brand?->name ?? 'Black Multimarca' }} · {{ $product->category->name }}

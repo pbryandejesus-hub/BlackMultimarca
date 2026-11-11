@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderReceiptController;
@@ -25,6 +26,7 @@ Route::get('/marcas', [BrandController::class, 'index'])->name('brands.index');
 Route::get('/marca/{brand}', [CatalogController::class, 'brand'])->name('brands.show');
 Route::get('/producto/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/ayuda/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::post('/favoritos/{product}', [FavoriteController::class, 'toggle'])->middleware('throttle:60,1')->name('favorites.toggle');
 
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
 Route::post('/carrito', [CartController::class, 'store'])->name('cart.store');
@@ -47,6 +49,7 @@ Route::middleware('guest')->group(function (): void {
 Route::middleware('auth')->group(function (): void {
     Route::post('/salir', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/mi-cuenta', [AccountController::class, 'index'])->name('account.index');
+    Route::get('/mi-cuenta/favoritos', [FavoriteController::class, 'index'])->name('favorites.index');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {

@@ -261,6 +261,43 @@ function initCartDrawer() {
     });
 }
 
+/**
+ * Corazón de favoritos: guarda sin recargar la página. Sin JS el formulario funciona igual.
+ */
+function initFavorites() {
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-favorite-form]');
+        if (!form) return;
+
+        event.preventDefault();
+        const button = $('button', form);
+        button.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await response.json();
+
+            if (response.status === 401 && data.redirect) {
+                location.href = data.redirect;
+                return;
+            }
+            if (!response.ok) throw new Error(response.statusText);
+
+            $$(`[data-favorite-form][action="${form.action}"] button`).forEach((other) =>
+                other.setAttribute('aria-pressed', String(data.favorite)),
+            );
+        } catch {
+            form.submit();
+        } finally {
+            button.disabled = false;
+        }
+    });
+}
+
 function initCopyButtons() {
     $$('[data-copy]').forEach((button) => {
         const original = button.textContent;
@@ -429,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuantityInputs();
     initVariantPicker();
     initCartDrawer();
+    initFavorites();
     initCopyButtons();
     initDeliveryOptions();
     initVariantRows();

@@ -60,7 +60,10 @@
             <div class="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
                 <div class="flex flex-col gap-2.5">
                     <span class="eyebrow">{{ $product->brand?->name ?? 'Black Multimarca' }} · {{ $product->category->name }}</span>
-                    <h1 class="font-display text-3xl leading-tight font-medium md:text-4xl">{{ $product->name }}</h1>
+                    <div class="flex items-start justify-between gap-4">
+                        <h1 class="font-display text-3xl leading-tight font-medium md:text-4xl">{{ $product->name }}</h1>
+                        <x-favorite-button :product="$product" class="shrink-0" />
+                    </div>
                     @if ($product->sku)
                         <span class="text-xs text-muted">Código {{ $product->sku }}</span>
                     @endif
