@@ -20,6 +20,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        // En Docker Vite escucha en 0.0.0.0, pero el navegador tiene que pedir los archivos a localhost
+        // (Chrome bloquea 0.0.0.0 y la página se ve sin estilos).
+        hmr: {
+            host: 'localhost',
+        },
         watch: {
             // vendor/ y storage/ tienen miles de archivos que el front no usa: vigilarlos en Windows
             // hacía que Vite tardara decenas de segundos en responder o se quedara colgado.

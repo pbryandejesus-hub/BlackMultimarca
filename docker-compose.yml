@@ -63,7 +63,8 @@ services:
     volumes:
       - .:/var/www/html
       - node_modules_data:/var/www/html/node_modules
-    command: sh -c "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0"
+    # Reinstala solo cuando cambia package-lock.json (por ejemplo, al sumar model-viewer o chart.js).
+    command: sh -c "cmp -s package-lock.json node_modules/.installed-lock || (npm ci && cp package-lock.json node_modules/.installed-lock); npm run dev -- --host 0.0.0.0"
     ports:
       - "5173:5173"
     init: true
