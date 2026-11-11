@@ -22,6 +22,7 @@ class SearchSuggestionController extends Controller
         $products = Product::active()
             ->matching($term)
             ->with(['images', 'brand'])
+            ->orderByRaw('CASE WHEN name LIKE ? THEN 0 ELSE 1 END', ["%{$term}%"])
             ->orderBy('name')
             ->take(6)
             ->get()

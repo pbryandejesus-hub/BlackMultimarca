@@ -46,7 +46,7 @@
                     <label for="header-search" class="sr-only">Buscar productos</label>
                     <svg aria-hidden="true" class="h-4 w-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
                     <input id="header-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="header-search-list" data-search-suggest="{{ route('search.suggestions') }}" class="ml-2 w-40 border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
-                    <ul id="header-search-list" role="listbox" aria-label="Sugerencias" hidden class="absolute top-full right-0 z-40 mt-2 w-80 overflow-hidden border border-line bg-white text-coal shadow-xl"></ul>
+                    <ul id="header-search-list" role="listbox" aria-label="Sugerencias" hidden class="absolute top-full left-0 z-40 mt-2 w-80 overflow-hidden border border-line bg-white text-coal shadow-xl"></ul>
                 </form>
 
                 @auth

@@ -24,6 +24,16 @@ class SearchSuggestionTest extends TestCase
             ->assertJsonPath('products.0.url', route('products.show', $product));
     }
 
+    public function test_products_matching_by_name_come_first(): void
+    {
+        Product::factory()->create(['name' => 'Almohada', 'description' => 'Excelente calidad']);
+        Product::factory()->create(['name' => 'Calza tiro alto', 'description' => 'Deportiva']);
+
+        $this->getJson(route('search.suggestions', ['q' => 'cal']))
+            ->assertJsonPath('products.0.name', 'Calza tiro alto')
+            ->assertJsonPath('products.1.name', 'Almohada');
+    }
+
     public function test_needs_at_least_two_letters(): void
     {
         Product::factory()->create(['name' => 'Remera']);
