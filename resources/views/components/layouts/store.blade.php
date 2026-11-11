@@ -26,16 +26,18 @@
         Pagá por transferencia bancaria · Retiro en el local o envío
     </div>
 
-    <header class="border-b border-edge bg-ink">
+    <header class="sticky top-0 z-30 border-b border-edge bg-ink">
         <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 md:px-6">
             <a href="{{ route('home') }}" aria-label="Black Multimarca, inicio">
                 <x-logo size="lg" />
             </a>
 
             <nav aria-label="Categorías" class="order-last hidden w-full flex-wrap gap-x-6 gap-y-2 text-xs font-medium tracking-[0.16em] uppercase lg:order-none lg:flex lg:w-auto">
+                <a href="{{ route('new-arrivals') }}" class="text-cream hover:text-gold">Novedades</a>
                 @foreach ($navCategories as $navCategory)
-                    <a href="{{ route('catalog', ['categoria' => $navCategory->slug]) }}" class="text-cream hover:text-gold">{{ $navCategory->name }}</a>
+                    <a href="{{ route('categories.show', $navCategory) }}" class="text-cream hover:text-gold">{{ $navCategory->name }}</a>
                 @endforeach
+                <a href="{{ route('brands.index') }}" class="text-cream hover:text-gold">Marcas</a>
                 <a href="{{ route('catalog') }}" class="text-gold hover:text-gold-light">Ver todo</a>
             </nav>
 
@@ -74,15 +76,17 @@
             </div>
         </div>
 
-        <div id="mobile-menu" class="hidden border-t border-edge px-4 pb-5 lg:hidden">
+        <div id="mobile-menu" class="hidden max-h-[calc(100dvh-5rem)] overflow-y-auto border-t border-edge px-4 pb-5 lg:hidden">
             <form action="{{ route('catalog') }}" method="GET" role="search" class="mt-4 flex h-11 items-center rounded-full border border-edge bg-[#161616] px-4">
                 <label for="mobile-search" class="sr-only">Buscar productos</label>
                 <input id="mobile-search" type="search" name="q" value="{{ request('q') }}" placeholder="Buscar productos" class="w-full border-0 bg-transparent text-sm text-cream placeholder:text-cream-muted/60 focus:outline-none">
             </form>
             <nav aria-label="Categorías (móvil)" class="mt-4 flex flex-col text-sm font-medium tracking-[0.14em] uppercase">
+                <a href="{{ route('new-arrivals') }}" class="border-b border-edge py-3 text-cream">Novedades</a>
                 @foreach ($navCategories as $navCategory)
-                    <a href="{{ route('catalog', ['categoria' => $navCategory->slug]) }}" class="border-b border-edge py-3 text-cream">{{ $navCategory->name }}</a>
+                    <a href="{{ route('categories.show', $navCategory) }}" class="border-b border-edge py-3 text-cream">{{ $navCategory->name }}</a>
                 @endforeach
+                <a href="{{ route('brands.index') }}" class="border-b border-edge py-3 text-cream">Marcas</a>
                 <a href="{{ route('catalog') }}" class="py-3 text-gold">Ver todo</a>
             </nav>
             <div class="mt-3 flex gap-3">
@@ -125,9 +129,12 @@
             </div>
             <div class="flex flex-col gap-2.5 text-sm">
                 <span class="text-[11px] tracking-[0.24em] text-gold uppercase">Tienda</span>
+                <a href="{{ route('new-arrivals') }}" class="hover:text-gold-light">Novedades</a>
                 @foreach ($navCategories->take(6) as $navCategory)
-                    <a href="{{ route('catalog', ['categoria' => $navCategory->slug]) }}" class="hover:text-gold-light">{{ $navCategory->name }}</a>
+                    <a href="{{ route('categories.show', $navCategory) }}" class="hover:text-gold-light">{{ $navCategory->name }}</a>
                 @endforeach
+                <a href="{{ route('categories.index') }}" class="hover:text-gold-light">Todas las categorías</a>
+                <a href="{{ route('brands.index') }}" class="hover:text-gold-light">Marcas</a>
             </div>
             <div class="flex flex-col gap-2.5 text-sm">
                 <span class="text-[11px] tracking-[0.24em] text-gold uppercase">Ayuda</span>

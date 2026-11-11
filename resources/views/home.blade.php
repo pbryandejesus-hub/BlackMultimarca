@@ -8,8 +8,8 @@
                 <h1 class="font-display text-4xl leading-tight font-medium md:text-6xl">Todo lo que buscás,<br>en un solo lugar</h1>
                 <p class="max-w-md text-lg leading-relaxed text-cream">Ropa, deportiva, lencería, medias y blanquería para tu casa. Las mejores marcas reunidas en Black Multimarca.</p>
                 <div class="mt-2 flex flex-wrap gap-3">
-                    <a href="#novedades" class="btn-gold">Ver novedades</a>
-                    <a href="#categorias" class="btn-outline-gold bg-ink/40">Explorar categorías</a>
+                    <a href="{{ route('new-arrivals') }}" class="btn-gold">Ver novedades</a>
+                    <a href="{{ route('categories.index') }}" class="btn-outline-gold bg-ink/40">Explorar categorías</a>
                 </div>
             </div>
             <div class="hidden flex-[0_1_300px] justify-center lg:flex">
@@ -39,10 +39,13 @@
 
     @if ($categories->isNotEmpty())
         <section id="categorias" class="mx-auto max-w-7xl px-4 pt-16 md:px-6">
-            <x-section-heading eyebrow="Comprá por" title="Categorías" class="mb-10" />
+            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <x-section-heading eyebrow="Comprá por" title="Categorías" :center="false" />
+                <a href="{{ route('categories.index') }}" class="border-b border-bronze pb-1 text-xs font-semibold tracking-[0.16em] text-bronze uppercase">Ver todas</a>
+            </div>
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                 @foreach ($categories as $category)
-                    <a href="{{ route('catalog', ['categoria' => $category->slug]) }}" class="group flex flex-col gap-3">
+                    <a href="{{ route('categories.show', $category) }}" class="group flex flex-col gap-3">
                         <div class="aspect-[3/4] overflow-hidden border border-line bg-sand">
                             @if ($category->imageUrl())
                                 <img src="{{ $category->imageUrl() }}" alt="" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
@@ -67,7 +70,7 @@
             ['images/banner-ropa.jpg', 'Ropa', 'Básicos que combinan con todo', 'Remeras, jeans, camisas y más para todos los días.', 'ropa'],
             ['images/banner-hogar.jpg', 'Blanquería y hogar', 'Tu casa también se viste', 'Sábanas, almohadas, manteles y toallas de calidad.', 'blanqueria'],
         ] as [$bannerImage, $bannerEyebrow, $bannerTitle, $bannerText, $bannerCategory])
-            <a href="{{ route('catalog', ['categoria' => $bannerCategory]) }}" class="group relative isolate flex min-h-80 flex-col justify-end overflow-hidden bg-ink p-7 text-cream md:min-h-96 md:p-9">
+            <a href="{{ route('categories.show', $bannerCategory) }}" class="group relative isolate flex min-h-80 flex-col justify-end overflow-hidden bg-ink p-7 text-cream md:min-h-96 md:p-9">
                 <img src="{{ asset($bannerImage) }}" alt="" loading="lazy" class="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105">
                 <div class="absolute inset-x-0 bottom-0 -z-10 h-2/3 bg-ink/70 [mask-image:linear-gradient(to_top,black_40%,transparent)]" aria-hidden="true"></div>
                 <span class="text-[11px] tracking-[0.3em] text-gold uppercase">{{ $bannerEyebrow }}</span>
@@ -92,7 +95,7 @@
     <section id="novedades" class="mx-auto max-w-7xl px-4 py-16 md:px-6">
         <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
             <x-section-heading eyebrow="Recién llegados" title="Novedades" :center="false" />
-            <a href="{{ route('catalog') }}" class="border-b border-bronze pb-1 text-xs font-semibold tracking-[0.16em] text-bronze uppercase">Ver todo</a>
+            <a href="{{ route('new-arrivals') }}" class="border-b border-bronze pb-1 text-xs font-semibold tracking-[0.16em] text-bronze uppercase">Ver todas</a>
         </div>
         @if ($newProducts->isEmpty())
             <p class="text-muted">Pronto vas a encontrar acá los nuevos ingresos.</p>
@@ -146,10 +149,13 @@
 
     @if ($brands->isNotEmpty())
         <section class="mx-auto max-w-7xl px-4 py-16 md:px-6">
-            <x-section-heading eyebrow="Multimarca" title="Nuestras marcas" class="mb-10" />
+            <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <x-section-heading eyebrow="Multimarca" title="Nuestras marcas" :center="false" />
+                <a href="{{ route('brands.index') }}" class="border-b border-bronze pb-1 text-xs font-semibold tracking-[0.16em] text-bronze uppercase">Ver todas</a>
+            </div>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 @foreach ($brands as $brand)
-                    <a href="{{ route('catalog', ['marca' => $brand->slug]) }}" class="flex h-24 items-center justify-center border border-line bg-white px-4 font-display text-sm tracking-[0.14em] text-muted hover:border-bronze hover:text-bronze">
+                    <a href="{{ route('brands.show', $brand) }}" class="flex h-24 items-center justify-center border border-line bg-white px-4 font-display text-sm tracking-[0.14em] text-muted hover:border-bronze hover:text-bronze">
                         @if ($brand->logoUrl())
                             <img src="{{ $brand->logoUrl() }}" alt="{{ $brand->name }}" class="max-h-14 object-contain" loading="lazy">
                         @else

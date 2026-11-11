@@ -4,8 +4,10 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
@@ -16,6 +18,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/tienda', [CatalogController::class, 'index'])->name('catalog');
+Route::get('/novedades', [CatalogController::class, 'newArrivals'])->name('new-arrivals');
+Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categoria/{category}', [CatalogController::class, 'category'])->name('categories.show');
+Route::get('/marcas', [BrandController::class, 'index'])->name('brands.index');
+Route::get('/marca/{brand}', [CatalogController::class, 'brand'])->name('brands.show');
 Route::get('/producto/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/ayuda/{page}', [PageController::class, 'show'])->name('pages.show');
 

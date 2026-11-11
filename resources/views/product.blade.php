@@ -18,7 +18,7 @@
         <nav aria-label="Ruta" class="mb-7 flex flex-wrap gap-2 text-xs text-muted">
             <a href="{{ route('home') }}" class="hover:text-bronze">Inicio</a>
             <span aria-hidden="true">/</span>
-            <a href="{{ route('catalog', ['categoria' => $product->category->slug]) }}" class="hover:text-bronze">{{ $product->category->name }}</a>
+            <a href="{{ route('categories.show', $product->category) }}" class="hover:text-bronze">{{ $product->category->name }}</a>
             <span aria-hidden="true">/</span>
             <span>{{ $product->name }}</span>
         </nav>

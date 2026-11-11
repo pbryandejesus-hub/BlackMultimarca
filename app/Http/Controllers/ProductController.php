@@ -21,6 +21,15 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
+        if ($relatedProducts->count() < 4) {
+            $relatedProducts = $relatedProducts->concat(Product::active()
+                ->with(['images', 'brand', 'category'])
+                ->whereKeyNot([$product->id, ...$relatedProducts->modelKeys()])
+                ->latest()
+                ->take(4 - $relatedProducts->count())
+                ->get());
+        }
+
         return view('product', [
             'product' => $product,
             'relatedProducts' => $relatedProducts,
