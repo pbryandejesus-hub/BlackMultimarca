@@ -90,7 +90,7 @@
                             {{ $variant->product->name }} <span class="text-muted">· {{ $variant->label() }}</span>
                         </a>
                         @if ($variant->pending_alerts_count > 0)
-                            <a href="{{ route('admin.products.edit', $variant->product) }}#interesados" class="ml-auto shrink-0 bg-gold/25 px-2 py-0.5 text-xs font-semibold text-bronze-dark hover:bg-gold/40">{{ $variant->pending_alerts_count }} {{ $variant->pending_alerts_count === 1 ? 'interesado' : 'interesados' }}</a>
+                            <a href="{{ route('admin.products.edit', $variant->product) }}#interesados-{{ $variant->id }}" class="ml-auto shrink-0 bg-gold/25 px-2 py-0.5 text-xs font-semibold text-bronze-dark hover:bg-gold/40">{{ $variant->pending_alerts_count }} {{ $variant->pending_alerts_count === 1 ? 'interesado' : 'interesados' }}</a>
                         @endif
                         <span @class(['font-semibold', 'text-red-700' => $variant->stock === 0])>{{ $variant->stock }}</span>
                     </li>

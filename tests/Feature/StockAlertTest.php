@@ -61,11 +61,14 @@ class StockAlertTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.products.edit', $variant->product))
             ->assertSee('Interesados en reposición')
+            ->assertSee('data-alert-variant-id="'.$variant->id.'"', false)
             ->assertSee('0981 123456')
             ->assertSee('https://wa.me/595981123456', false)
             ->assertDontSee('ya-avisado@example.com');
 
-        $this->actingAs($admin)->get(route('admin.dashboard'))->assertSee('1 interesado');
+        $this->actingAs($admin)->get(route('admin.dashboard'))
+            ->assertSee('1 interesado')
+            ->assertSee(route('admin.products.edit', $variant->product).'#interesados-'.$variant->id, false);
 
         $this->actingAs($admin)
             ->patch(route('admin.stock-alerts.update', $phoneAlert))

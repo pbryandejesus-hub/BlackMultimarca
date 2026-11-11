@@ -149,7 +149,7 @@
                             $alertVariant = $product->variants->firstWhere('id', $alert->product_variant_id);
                             $alertMessage = "¡Hola! Te escribimos de Black Multimarca: volvió {$product->name} ({$alertVariant->label()}). Lo podés ver acá: ".route('products.show', $product);
                         @endphp
-                        <li class="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+                        <li data-alert-variant-id="{{ $alert->product_variant_id }}" class="-mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-3">
                             <div class="flex min-w-48 grow flex-col">
                                 <span class="font-medium">{{ $alert->contact }}</span>
                                 <span class="text-xs text-muted">

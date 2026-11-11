@@ -509,22 +509,29 @@ function initVariantRows() {
 }
 
 /**
- * Panel de administración: al llegar desde "Poco stock" (#variante-ID) baja suave hasta esa variante,
- * la ilumina y enfoca su stock. La fila no tiene id para que el navegador no salte de golpe.
+ * Panel de administración: al llegar desde "Poco stock" baja suave hasta lo que se tocó y lo ilumina.
+ * - #variante-ID: la fila de esa variante, con su stock enfocado.
+ * - #interesados-ID: los clientes que esperan esa variante.
+ * Las filas no tienen id para que el navegador no salte de golpe.
  */
 function initTargetedVariant() {
-    const variantId = location.hash.match(/^#variante-(\d+)$/)?.[1];
-    const row = variantId && $(`[data-variant-id="${variantId}"]`);
-    if (!row) return;
+    const [, target, variantId] = location.hash.match(/^#(variante|interesados)-(\d+)$/) ?? [];
+    if (!variantId) return;
+
+    const rows =
+        target === 'variante'
+            ? $$(`[data-variant-id="${variantId}"]`)
+            : $$(`[data-alert-variant-id="${variantId}"]`);
+    if (!rows.length) return;
 
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const stockInput = $('[data-variant-stock]', row);
+    const stockInput = target === 'variante' ? $('[data-variant-stock]', rows[0]) : null;
 
     setTimeout(() => {
-        row.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+        rows[0].scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
         setTimeout(
             () => {
-                row.classList.add('variant-highlight');
+                rows.forEach((row) => row.classList.add('variant-highlight'));
                 stockInput?.focus({ preventScroll: true });
                 stockInput?.select();
             },

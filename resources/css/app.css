@@ -107,6 +107,12 @@
     }
 }
 
+/* Los interesados ya tienen relleno propio y van uno debajo del otro: sin la sombra de relleno no se superponen. */
+[data-alert-variant-id].variant-highlight {
+    box-shadow: none !important;
+    outline-offset: -2px;
+}
+
 /* Carrito lateral: entra deslizándose desde la derecha. */
 @keyframes drawer-in {
     from {
