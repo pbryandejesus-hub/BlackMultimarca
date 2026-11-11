@@ -35,6 +35,17 @@ except (OSError, json.JSONDecodeError):
 ANSI_ESCAPE = re.compile(r'\x1b\[[0-?]*[ -/]*[@-~]')
 
 
+def run_command(command: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+    """Run a command, returning a failed result instead of raising when the binary is missing or hangs."""
+    options = {'capture_output': True, 'text': True, 'check': False, **options}
+    try:
+        return subprocess.run(command, **options)
+    except FileNotFoundError:
+        return subprocess.CompletedProcess(command, 127, '', f'No se encontró "{command[0]}". ¿Está instalado y en el PATH?')
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(command, 124, '', f'"{" ".join(command[:3])}" no respondió a tiempo.')
+
+
 def update_test_state(**changes: object) -> None:
     with LOCK:
         TEST_STATE.update(changes)
@@ -45,7 +56,7 @@ def run_tests(mode: str) -> None:
     env_args: list[str]
     if mode == 'mysql':
         db_container = f'black-audit-mysql-{uuid.uuid4().hex[:8]}'
-        network_result = subprocess.run(
+        network_result = run_command(
             ['docker', 'inspect', 'programacion-iv-app', '--format', '{{range $network, $_ := .NetworkSettings.Networks}}{{$network}}{{end}}'],
             capture_output=True, text=True, timeout=5, check=False,
         )
@@ -56,7 +67,7 @@ def run_tests(mode: str) -> None:
 
         update_test_state(output='Creando una base MySQL temporal aislada…')
         password = 'local-audit-only'
-        start_result = subprocess.run(
+        start_result = run_command(
             [
                 'docker', 'run', '--detach', '--rm', '--name', db_container,
                 '--network', network,
@@ -76,7 +87,7 @@ def run_tests(mode: str) -> None:
         deadline = time.monotonic() + 90
         healthy = False
         while time.monotonic() < deadline:
-            inspect = subprocess.run(
+            inspect = run_command(
                 ['docker', 'inspect', db_container, '--format', '{{.State.Health.Status}}'],
                 capture_output=True, text=True, timeout=5, check=False,
             )
@@ -87,8 +98,8 @@ def run_tests(mode: str) -> None:
                 break
             time.sleep(2)
         if not healthy:
-            logs = subprocess.run(['docker', 'logs', '--tail=30', db_container], capture_output=True, text=True, timeout=8, check=False)
-            subprocess.run(['docker', 'rm', '--force', db_container], capture_output=True, timeout=10, check=False)
+            logs = run_command(['docker', 'logs', '--tail=30', db_container], capture_output=True, text=True, timeout=8, check=False)
+            run_command(['docker', 'rm', '--force', db_container], capture_output=True, timeout=10, check=False)
             update_test_state(state='done', ok=False, output=f'MySQL temporal no quedó listo.\n{logs.stdout[-5000:]}{logs.stderr[-2000:]}', finished_at=datetime.now().astimezone().strftime('%d/%m/%Y %H:%M:%S'))
             return
 
@@ -133,7 +144,7 @@ def run_tests(mode: str) -> None:
     finally:
         if db_container:
             update_test_state(output='Suite terminada. Limpiando la base temporal…')
-            subprocess.run(['docker', 'rm', '--force', db_container], capture_output=True, timeout=15, check=False)
+            run_command(['docker', 'rm', '--force', db_container], capture_output=True, timeout=15, check=False)
 
     finished_at = datetime.now().astimezone().strftime('%d/%m/%Y %H:%M:%S')
     clean_output = ANSI_ESCAPE.sub('', output).strip() or 'La suite terminó sin salida.'
@@ -181,13 +192,10 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if self.path == '/api/logs':
-            result = subprocess.run(
+            result = run_command(
                 ['docker', 'compose', 'logs', '--no-color', '--tail=60', 'app', 'frontend', 'scheduler'],
                 cwd=PROJECT,
-                capture_output=True,
-                text=True,
                 timeout=8,
-                check=False,
             )
             logs = (result.stdout + result.stderr)[-40000:]
             self.send_json({'logs': logs.strip(), 'ok': result.returncode == 0})
@@ -226,13 +234,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json({'state': 'running'}, 202)
 
     def status_payload(self) -> dict[str, object]:
-        docker_result = subprocess.run(
+        docker_result = run_command(
             ['docker', 'compose', 'ps', '--format', 'json'],
             cwd=PROJECT,
-            capture_output=True,
-            text=True,
             timeout=5,
-            check=False,
         )
         services = []
         if docker_result.returncode == 0:

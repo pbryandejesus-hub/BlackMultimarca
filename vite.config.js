@@ -21,7 +21,9 @@ export default defineConfig({
     ],
     server: {
         watch: {
-            ignored: ['**/storage/framework/views/**'],
+            // vendor/ y storage/ tienen miles de archivos que el front no usa: vigilarlos en Windows
+            // hacía que Vite tardara decenas de segundos en responder o se quedara colgado.
+            ignored: ['**/vendor/**', '**/storage/**', '**/public/build/**'],
         },
     },
 });
