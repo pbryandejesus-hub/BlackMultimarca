@@ -81,8 +81,16 @@
                     @endif
                 </div>
 
+                @if ($product->category->sizeGuideRows())
+                    <button type="button" data-dialog-open="size-guide" class="flex items-center gap-2 self-start text-sm text-bronze underline-offset-4 hover:underline">
+                        <svg aria-hidden="true" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></svg>
+                        Guía de talles
+                    </button>
+                @endif
+
                 @if (! $inStock)
-                    <p class="border border-line bg-white px-4 py-3 text-sm">Este producto está agotado por el momento. Consultanos por WhatsApp cuándo vuelve a ingresar.</p>
+                    <p class="border border-line bg-white px-4 py-3 text-sm">Este producto está agotado por el momento.</p>
+                    <x-stock-alert-form :variants="$product->variants" />
                 @else
                     <form method="POST" action="{{ route('cart.store') }}" class="flex flex-col gap-6">
                         @csrf
@@ -140,6 +148,10 @@
                             <button type="submit" data-add-to-cart class="btn-dark h-13 flex-[1_1_220px] text-[13px]">Agregar al carrito</button>
                         </div>
                     </form>
+
+                    @if ($product->variants->contains(fn ($variant) => $variant->stock < 1))
+                        <x-stock-alert-form :variants="$product->variants" hidden />
+                    @endif
                 @endif
 
                 @if ($whatsappNumber)
@@ -228,6 +240,36 @@
                     <p data-model-error hidden class="absolute inset-x-0 top-1/2 px-6 text-center text-sm text-muted">No se pudo cargar la vista 3D. Revisá tu conexión e intentá de nuevo.</p>
                 </div>
                 <p class="border-t border-line px-5 py-3 text-center text-xs text-muted">Arrastrá para girar · Rueda o pellizcá para hacer zoom · En el celular podés verlo en tu espacio con realidad aumentada</p>
+            </div>
+        </dialog>
+    @endif
+
+    @if ($sizeGuideRows = $product->category->sizeGuideRows())
+        <dialog id="size-guide" aria-labelledby="size-guide-title" class="m-auto w-[calc(100%-2rem)] max-w-xl bg-ivory p-0 text-coal backdrop:bg-ink/55">
+            <div class="flex items-center justify-between border-b border-line px-5 py-4">
+                <h2 id="size-guide-title" class="font-display text-lg font-semibold">Guía de talles · {{ $product->category->name }}</h2>
+                <button type="button" data-dialog-close class="h-10 w-10 text-3xl leading-none hover:text-bronze" aria-label="Cerrar guía de talles">×</button>
+            </div>
+            <div class="overflow-x-auto p-5">
+                <table class="w-full text-left text-sm">
+                    <thead class="border-b border-line-strong text-xs tracking-wide uppercase">
+                        <tr>
+                            @foreach ($sizeGuideRows[0] as $heading)
+                                <th class="px-3 py-2 font-semibold">{{ $heading }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        @foreach (array_slice($sizeGuideRows, 1) as $row)
+                            <tr>
+                                @foreach ($row as $cell)
+                                    <td @class(['px-3 py-2', 'font-semibold' => $loop->first])>{{ $cell }}</td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <p class="mt-4 text-xs text-muted">Medidas en centímetros. Si dudás entre dos talles, escribinos por WhatsApp y te asesoramos.</p>
             </div>
         </dialog>
     @endif

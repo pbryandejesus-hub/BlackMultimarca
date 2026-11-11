@@ -160,6 +160,7 @@ function initVariantPicker() {
     const hiddenInput = $('[data-variant-input]', picker);
     const fallbackSelect = $('[data-variant-fallback]', picker);
     const stockMessage = $('[data-stock-message]', picker);
+    const stockAlertForm = $('[data-stock-alert]');
     const colorName = $('[data-color-name]', picker);
     const submit = $('[data-add-to-cart]');
     const quantityInput = $('[data-quantity] input');
@@ -198,7 +199,8 @@ function initVariantPicker() {
             const available = Boolean(variant && variant.stock > 0);
             const selected = button.dataset.size === state.size;
 
-            button.disabled = !available;
+            // Los talles agotados se pueden elegir igual, para ofrecer "Avisarme cuando vuelva".
+            button.disabled = !variant;
             button.setAttribute('aria-pressed', String(selected));
             button.classList.toggle('bg-ink', selected);
             button.classList.toggle('text-gold-light', selected);
@@ -213,6 +215,11 @@ function initVariantPicker() {
         hiddenInput.value = ready ? variant.id : '';
         submit.disabled = !ready;
 
+        if (stockAlertForm) {
+            stockAlertForm.hidden = !variant || ready;
+            $('[name="variant_id"]', stockAlertForm).value = variant && !ready ? variant.id : '';
+        }
+
         if (quantityInput && ready) {
             quantityInput.max = variant.stock;
             if (Number(quantityInput.value) > variant.stock) quantityInput.value = variant.stock;
@@ -221,7 +228,7 @@ function initVariantPicker() {
         if (!variant && hasSizes && !state.size) {
             stockMessage.textContent = 'Elegí un talle.';
         } else if (!ready) {
-            stockMessage.textContent = 'Sin stock en esta combinación.';
+            stockMessage.textContent = variant ? 'Sin stock en este talle y color.' : 'Esta combinación no está disponible.';
         } else if (variant.stock <= 2) {
             stockMessage.textContent = `¡Quedan solo ${variant.stock}!`;
         } else {
@@ -295,6 +302,21 @@ function initFavorites() {
         } finally {
             button.disabled = false;
         }
+    });
+}
+
+/**
+ * Ventanas simples (como la guía de talles): un botón data-dialog-open="id" abre el <dialog> con ese id.
+ */
+function initDialogs() {
+    $$('[data-dialog-open]').forEach((button) => {
+        const dialog = document.getElementById(button.dataset.dialogOpen);
+        if (!dialog) return;
+
+        button.addEventListener('click', () => dialog.showModal());
+        dialog.addEventListener('click', (event) => {
+            if (event.target === dialog || event.target.closest('[data-dialog-close]')) dialog.close();
+        });
     });
 }
 
@@ -467,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initVariantPicker();
     initCartDrawer();
     initFavorites();
+    initDialogs();
     initCopyButtons();
     initDeliveryOptions();
     initVariantRows();

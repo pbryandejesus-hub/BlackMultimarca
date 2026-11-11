@@ -13,6 +13,10 @@
         <label class="field-label sm:col-span-2">Subtítulo
             <input type="text" name="subtitle" value="{{ old('subtitle', $category->subtitle) }}" class="field-input" placeholder="Ej.: Training · Running">
         </label>
+        <label class="field-label sm:col-span-2">Guía de talles (opcional)
+            <textarea name="size_guide" rows="6" class="field-input py-2.5 font-mono" placeholder="Talle | Pecho | Cintura | Largo&#10;S | 88-92 | 72-76 | 68&#10;M | 96-100 | 80-84 | 70">{{ old('size_guide', $category->size_guide) }}</textarea>
+            <span class="font-normal text-muted">Una fila por línea y columnas separadas por "|". La primera fila son los títulos. Se muestra en la ficha de cada producto de esta categoría.</span>
+        </label>
         <label class="field-label">Orden en el menú
             <input type="number" name="position" value="{{ old('position', $category->position ?? 0) }}" min="0" class="field-input">
         </label>

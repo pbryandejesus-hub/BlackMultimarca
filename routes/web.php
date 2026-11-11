@@ -15,6 +15,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderReceiptController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockAlertController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -26,6 +27,7 @@ Route::get('/marcas', [BrandController::class, 'index'])->name('brands.index');
 Route::get('/marca/{brand}', [CatalogController::class, 'brand'])->name('brands.show');
 Route::get('/producto/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/ayuda/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::post('/avisarme', [StockAlertController::class, 'store'])->middleware('throttle:10,1')->name('stock-alerts.store');
 Route::post('/favoritos/{product}', [FavoriteController::class, 'toggle'])->middleware('throttle:60,1')->name('favorites.toggle');
 
 Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');

@@ -28,6 +28,7 @@ class CategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:80'],
             'slug' => ['required', 'alpha_dash', 'max:100', Rule::unique('categories', 'slug')->ignore($this->route('category')?->id)],
             'subtitle' => ['nullable', 'string', 'max:120'],
+            'size_guide' => ['nullable', 'string', 'max:5000'],
             'position' => ['required', 'integer', 'min:0', 'max:1000'],
             'is_active' => ['boolean'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
