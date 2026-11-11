@@ -85,7 +85,7 @@
 
             <section class="card flex flex-col gap-4 p-6">
                 <h2 class="font-display text-lg font-semibold">Modelo 3D</h2>
-                <p class="text-sm text-muted">Opcional. Con un modelo 3D el cliente puede girar la prenda, hacer zoom y verla en realidad aumentada desde el celular. Se genera gratis escaneando la prenda (mejor sobre un maniquí) con apps como Polycam, KIRI Engine o Luma AI, o a partir de fotos con Meshy o Tripo. Exportalo en formato GLB.</p>
+                <p class="text-sm text-muted">Opcional. Con un modelo 3D el cliente puede girar la prenda, hacer zoom y verla en realidad aumentada desde el celular. Se hace gratis escaneando la prenda con el celular (mejor sobre un maniquí, con buena luz y girando alrededor) con apps como Polycam, Scaniverse o KIRI Engine. Exportalo en formato GLB; si pesa más de 20 MB, comprimilo en gltf.report antes de subirlo.</p>
                 @if ($isEditing && $product->hasModel())
                     <div class="flex flex-wrap items-center gap-4 border border-line bg-ivory-dark px-4 py-3 text-sm">
                         <span>✓ Este producto tiene modelo 3D.</span>

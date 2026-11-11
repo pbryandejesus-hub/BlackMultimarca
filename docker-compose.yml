@@ -11,6 +11,8 @@ services:
       # vendor/ vive en un volumen de Docker: leer miles de archivos desde un disco de Windows
       # (WSL / Docker Desktop) hacía que cada página tardara varios segundos.
       - vendor_data:/var/www/html/vendor
+      # Límites de subida más altos para los modelos 3D (.glb) de los productos.
+      - ./php.development.ini:/usr/local/etc/php/conf.d/zz-development.ini:ro
     # Instala dependencias solo al inicializar el volumen; los cambios de lockfile se aplican manualmente.
     command: sh -c "if [ ! -f vendor/autoload.php ]; then composer install --no-interaction --prefer-dist; fi && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
     ports:
