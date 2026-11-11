@@ -22,6 +22,22 @@ class CartTest extends TestCase
         $this->assertSame([$variant->id => 2], session('cart'));
     }
 
+    public function test_cart_drawer_opens_after_adding_a_product_only(): void
+    {
+        $variant = ProductVariant::factory()
+            ->for(Product::factory()->state(['name' => 'Remera lisa', 'price' => 50000]))
+            ->create(['stock' => 3]);
+
+        $this->from(route('products.show', $variant->product))
+            ->followingRedirects()
+            ->post(route('cart.store'), ['variant_id' => $variant->id, 'quantity' => 2])
+            ->assertSee('data-cart-drawer', false)
+            ->assertSee('Agregaste Remera lisa al carrito.')
+            ->assertSee('₲ 100.000');
+
+        $this->get(route('products.show', $variant->product))->assertDontSee('data-cart-drawer', false);
+    }
+
     public function test_a_variant_without_stock_cannot_be_added(): void
     {
         $variant = ProductVariant::factory()->create(['stock' => 0]);

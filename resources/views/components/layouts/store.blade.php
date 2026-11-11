@@ -101,7 +101,12 @@
     </header>
 
     <main id="contenido" class="grow">
-        @if (session('status') || $errors->hasAny(['cart', 'variant_id']))
+        @if (session('cart_added'))
+            <x-cart-drawer :summary="app(\App\Support\Cart::class)->summary()" :message="session('status')" :discount-percent="$discountPercent" />
+            <noscript>
+                <div class="mx-auto max-w-7xl px-4 pt-6 md:px-6"><x-flash /></div>
+            </noscript>
+        @elseif (session('status') || $errors->hasAny(['cart', 'variant_id']))
             <div class="mx-auto max-w-7xl px-4 pt-6 md:px-6">
                 <x-flash />
             </div>

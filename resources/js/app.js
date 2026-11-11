@@ -248,6 +248,19 @@ function initVariantPicker() {
     render();
 }
 
+/**
+ * Carrito lateral que se abre después de agregar un producto. Se cierra con Esc, con los botones o tocando afuera.
+ */
+function initCartDrawer() {
+    const drawer = $('[data-cart-drawer]');
+    if (!drawer) return;
+
+    drawer.showModal();
+    drawer.addEventListener('click', (event) => {
+        if (event.target === drawer) drawer.close();
+    });
+}
+
 function initCopyButtons() {
     $$('[data-copy]').forEach((button) => {
         const original = button.textContent;
@@ -415,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initModelViewer();
     initQuantityInputs();
     initVariantPicker();
+    initCartDrawer();
     initCopyButtons();
     initDeliveryOptions();
     initVariantRows();

@@ -107,6 +107,28 @@
     }
 }
 
+/* Carrito lateral: entra deslizándose desde la derecha. */
+@keyframes drawer-in {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@utility drawer-in {
+    &[open] {
+        animation: drawer-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        &[open] {
+            animation: none;
+        }
+    }
+}
+
 @utility card {
     @apply border border-line bg-white;
 }
