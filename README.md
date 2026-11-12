@@ -27,7 +27,7 @@ El usuario administrativo de muestra no tiene una contraseña predeterminada. Pa
 
 ## Imagen de producción
 
-`Dockerfile.production` tiene objetivos separados para PHP-FPM y Nginx. Instala dependencias PHP con `composer.lock`, compila el frontend con `npm ci`, ejecuta PHP-FPM como `www-data` y usa Nginx sin privilegios. `docker-compose.production.yml` usa nombres de imágenes y proyecto separados de desarrollo, no monta el código del host ni inicia una base de datos: requiere un MySQL externo, un archivo local con credenciales y `APP_KEY`, y un proxy HTTPS en el host. El puerto HTTP publicado queda ligado a `127.0.0.1`; `SESSION_SECURE_COOKIE` se fuerza a verdadero. `TRUSTED_PROXIES=*` es apropiado solo porque PHP-FPM no publica puertos y Nginx es el único contenedor que puede alcanzarlo; el proxy HTTPS externo debe sobrescribir `X-Forwarded-Proto` y no aceptar ese valor directamente del cliente.
+`Dockerfile.production` tiene objetivos separados para PHP-FPM, Nginx y HAProxy. HAProxy publica el puerto HTTP existente y distribuye las solicitudes con roundrobin entre dos réplicas de Nginx; verifica `/up` y descubre sus direcciones por DNS de Docker. Nginx envía PHP a un único servicio PHP-FPM. Esto da redundancia a la capa web, pero HAProxy y PHP-FPM siguen siendo servicios únicos. Instala dependencias PHP con `composer.lock`, compila el frontend con `npm ci`, ejecuta PHP-FPM como `www-data` y usa Nginx sin privilegios. `docker-compose.production.yml` usa nombres de imágenes y proyecto separados de desarrollo, no monta el código del host ni inicia una base de datos: requiere un MySQL externo, un archivo local con credenciales y `APP_KEY`, y un proxy HTTPS en el host. El puerto HTTP publicado queda ligado a `127.0.0.1`; `SESSION_SECURE_COOKIE` se fuerza a verdadero. `TRUSTED_PROXIES=*` es apropiado solo porque PHP-FPM no publica puertos y los servicios internos están bajo el control del despliegue; el proxy HTTPS externo debe sobrescribir `X-Forwarded-Proto` y no aceptar ese valor directamente del cliente.
 
 Pasos de preparación local:
 
@@ -43,8 +43,10 @@ docker compose -f docker-compose.production.yml run --rm app php artisan migrate
 docker compose -f docker-compose.production.yml up -d
 docker compose -f docker-compose.production.yml exec app php artisan admin:create admin@tu-dominio
 docker compose -f docker-compose.production.yml ps
-docker compose -f docker-compose.production.yml logs -f app web scheduler
+docker compose -f docker-compose.production.yml logs -f app web haproxy scheduler
 ```
+
+HAProxy conserva los encabezados `Host` y `X-Forwarded-*` del proxy HTTPS externo; no termina TLS. Para ajustar las réplicas web, usá `docker compose -f docker-compose.production.yml up -d --scale web=3` (la configuración de HAProxy admite hasta diez). Después de cambiar `haproxy.production.cfg`, reconstruí y recreá su servicio con `docker compose -f docker-compose.production.yml up -d --build haproxy`.
 
 El volumen `storage_data` conserva comprobantes privados, sesiones y archivos públicos; Nginx lo monta solo lectura. TLS, MySQL, secretos, backups/restauración y supervisión del host son externos y deben configurarse y probarse antes de recibir tráfico real. No hay despliegue automatizado ni rollback de base de datos. Conservá una imagen anterior y un backup consistente antes de migrar; revertir las migraciones de historial y movimientos elimina esos datos.
 

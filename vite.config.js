@@ -20,6 +20,10 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        origin: 'http://localhost:5173',
+        hmr: {
+            host: 'localhost',
+        },
         watch: {
             // vendor/ y storage/ tienen miles de archivos que el front no usa: vigilarlos en Windows
             // hacía que Vite tardara decenas de segundos en responder o se quedara colgado.
