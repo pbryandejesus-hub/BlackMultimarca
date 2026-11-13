@@ -127,7 +127,7 @@ function initModelViewer() {
 
 function initQuantityInputs() {
     $$('[data-quantity]').forEach((wrapper) => {
-        const input = $('input', wrapper);
+        const input = $('input[type="number"]', wrapper);
         const clamp = (value) => {
             const min = Number(input.min || 1);
             const max = Number(input.max || 99);

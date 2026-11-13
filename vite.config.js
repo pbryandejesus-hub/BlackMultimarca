@@ -23,6 +23,11 @@ export default defineConfig({
         // En Docker Vite escucha en 0.0.0.0, pero el navegador tiene que pedir los archivos a localhost
         // (Chrome bloquea 0.0.0.0 y la página se ve sin estilos).
         origin: 'http://localhost:5173',
+        // La tienda (localhost:8000) pide los scripts a Vite (localhost:5173): sin esto Chrome los bloquea
+        // por CORS y no funciona ningún botón (cantidades, talles, carrito, favoritos…).
+        cors: {
+            origin: /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+        },
         hmr: {
             host: 'localhost',
         },
