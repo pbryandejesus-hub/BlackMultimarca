@@ -22,6 +22,7 @@ export default defineConfig({
     server: {
         // En Docker Vite escucha en 0.0.0.0, pero el navegador tiene que pedir los archivos a localhost
         // (Chrome bloquea 0.0.0.0 y la página se ve sin estilos).
+        origin: 'http://localhost:5173',
         hmr: {
             host: 'localhost',
         },
